@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mzenas — Operaciones · El Canton</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@20..48,100..700,0..1" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: #1A1A1A;
+  --accent: #E07856;
+  --accent-light: #F5D0C3;
+  --bg: #FAFAFA;
+  --surface: #FFFFFF;
+  --surface-dark: #1A1A1A;
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B6B6B;
+  --text-on-primary: #FFFFFF;
+  --success: #4CAF50;
+  --warning: #FFA726;
+  --error: #EF5350;
+  --border: #E8E4DF;
+  --border-light: #F0ECE8;
+  --font: 'Inter', -apple-system, system-ui, sans-serif;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --sidebar-w: 240px;
+}
+
+html, body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text-primary);
+  height: 100%; overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-layout {
+  display: flex;
+  height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebar-logo {
+  padding: 20px 20px 8px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.sidebar-restaurant {
+  padding: 0 20px 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 150ms;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.nav-item:hover { background: var(--bg); color: var(--text-primary); }
+
+.nav-item.active {
+  background: var(--primary);
+  color: var(--text-on-primary);
+}
+
+.nav-item .material-symbols-rounded { font-size: 20px; }
+
+.sidebar-bottom {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.nav-item-kitchen {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--surface-dark);
+  color: var(--text-on-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  width: 100%;
+  font-family: var(--font);
+}
+
+.nav-item-kitchen .material-symbols-rounded { font-size: 20px; }
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.page-header {
+  padding: 24px 32px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.page-header h1 { font-size: 24px; font-weight: 700; }
+
+.page-header .header-actions {
+  display: flex; gap: 8px;
+}
+
+.header-btn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: all 150ms;
+}
+
+.header-btn:hover { border-color: var(--text-secondary); }
+
+.header-btn-primary {
+  background: var(--primary);
+  color: var(--text-on-primary);
+  border-color: var(--primary);
+}
+
+.section { display: none; }
+.section.active { display: block; }
+
+/* ==================== TABLE MAP ==================== */
+.table-map-layout {
+  display: flex;
+  height: calc(100vh - 80px);
+}
+
+.floor-plan {
+  flex: 1;
+  padding: 24px 32px;
+  position: relative;
+}
+
+.floor-plan-stats {
+  display: flex; gap: 16px; margin-bottom: 20px;
+}
+
+.fp-stat {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px;
+}
+
+.fp-stat .dot {
+  width: 10px; height: 10px;
+  border-radius: 999px;
+}
+
+.fp-stat .dot.free { background: var(--success); }
+.fp-stat .dot.occupied { background: var(--accent); }
+.fp-stat .dot.reserved { background: #9E9E9E; }
+
+.floor-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  max-width: 700px;
+}
+
+.table-spot {
+  aspect-ratio: 1;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 200ms var(--ease);
+  position: relative;
+  border: 2px solid transparent;
+}
+
+.table-spot:hover { transform: scale(1.04); }
+.table-spot:active { transform: scale(0.97); }
+
+.table-spot.free {
+  background: #E8F5E9;
+  border-color: #A5D6A7;
+}
+
+.table-spot.occupied {
+  background: var(--accent-light);
+  border-color: var(--accent);
+}
+
+.table-spot.reserved {
+  background: #EEEEEE;
+  border-color: #BDBDBD;
+}
+
+.table-spot .table-num {
+  font-size: 18px; font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.table-spot .table-type {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table-spot .table-status-label {
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.table-spot.free .table-status-label { color: #2E7D32; }
+.table-spot.occupied .table-status-label { color: var(--accent); }
+.table-spot.reserved .table-status-label { color: #757575; }
+
+.table-spot .time-badge {
+  position: absolute;
+  top: 8px; right: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.08);
+  color: var(--text-secondary);
+}
+
+/* Table sidebar */
+.table-sidebar {
+  width: 320px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  padding: 24px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.table-sidebar h3 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+
+.reservation-list {
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.reservation-card {
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border-light);
+}
+
+.reservation-card .res-time { font-size: 14px; font-weight: 600; }
+.reservation-card .res-name { font-size: 14px; color: var(--text-secondary); }
+.reservation-card .res-guests { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+/* Table Detail Popover */
+.table-popover {
+  position: fixed;
+  background: var(--surface);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  padding: 20px;
+  width: 300px;
+  z-index: 100;
+  display: none;
+}
+
+.table-popover.show { display: block; }
+
+.table-popover h4 { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+
+.popover-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 14px;
+}
+
+.popover-row .label { color: var(--text-secondary); }
+
+.popover-actions {
+  display: flex; gap: 8px; margin-top: 16px;
+}
+
+.popover-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.popover-btn-free { background: var(--success); color: white; }
+.popover-btn-free:hover { opacity: 0.9; }
+.popover-btn-close { background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); }
+
+/* ==================== DASHBOARD ==================== */
+.dashboard-content { padding: 24px 32px; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid var(--border-light);
+}
+
+.stat-card .stat-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.stat-card .stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.stat-card .stat-change {
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.stat-card .stat-change.up { color: var(--success); }
+.stat-card .stat-change.down { color: var(--error); }
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.dash-card {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid var(--border-light);
+}
+
+.dash-card h3 {
+  font-size: 16px; font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.chart-container { position: relative; height: 240px; }
+
+.popular-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.popular-item:last-child { border-bottom: none; }
+
+.popular-rank {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.popular-rank.top { background: var(--accent-light); color: var(--accent); }
+
+.popular-info { flex: 1; }
+.popular-name { font-size: 14px; font-weight: 500; }
+.popular-count { font-size: 12px; color: var(--text-secondary); }
+
+.popular-bar {
+  width: 80px; height: 6px;
+  background: var(--bg);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.popular-bar-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 3px;
+}
+
+.activity-feed {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.activity-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.activity-item:last-child { border-bottom: none; }
+
+.activity-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.activity-icon.order { background: #E3F2FD; color: #1565C0; }
+.activity-icon.payment { background: #E8F5E9; color: #2E7D32; }
+.activity-icon.reservation { background: #FFF3E0; color: #E65100; }
+
+.activity-icon .material-symbols-rounded { font-size: 18px; }
+.activity-text { font-size: 13px; line-height: 1.4; }
+.activity-text strong { font-weight: 600; }
+.activity-time { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+/* ==================== MENU MANAGEMENT ==================== */
+.menu-mgmt { padding: 24px 32px; }
+
+.menu-tabs {
+  display: flex; gap: 8px; margin-bottom: 20px;
+}
+
+.menu-tab {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.menu-tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.menu-table {
+  width: 100%;
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+}
+
+.menu-table-header {
+  display: grid;
+  grid-template-columns: 60px 1fr 100px 100px 80px;
+  padding: 12px 20px;
+  background: var(--bg);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.menu-table-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 100px 100px 80px;
+  padding: 12px 20px;
+  align-items: center;
+  border-top: 1px solid var(--border-light);
+  transition: background 150ms;
+}
+
+.menu-table-row:hover { background: var(--bg); }
+
+.menu-row-img {
+  width: 44px; height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.menu-row-info .name { font-size: 14px; font-weight: 500; }
+.menu-row-info .category { font-size: 12px; color: var(--text-secondary); }
+
+.menu-row-price { font-size: 14px; font-weight: 600; }
+
+.menu-row-status { font-size: 13px; }
+.menu-row-status.available { color: var(--success); }
+.menu-row-status.unavailable { color: var(--error); }
+
+/* Toggle small */
+.toggle-sm {
+  position: relative;
+  width: 40px; height: 24px;
+  border-radius: 12px;
+  background: var(--border);
+  cursor: pointer;
+  transition: background 200ms;
+  border: none;
+}
+
+.toggle-sm.on { background: var(--success); }
+
+.toggle-sm::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 20px; height: 20px;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  transition: transform 200ms var(--ease);
+}
+
+.toggle-sm.on::after { transform: translateX(16px); }
+
+/* ==================== CONFIGURATION ==================== */
+.config-content { padding: 24px 32px; max-width: 720px; }
+
+.config-section {
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.config-section h3 {
+  font-size: 16px; font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.config-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.config-row:last-child { border-bottom: none; }
+
+.config-row .cr-label { font-size: 14px; font-weight: 500; }
+.config-row .cr-desc { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+.color-preview {
+  display: flex; gap: 8px; align-items: center;
+}
+
+.color-swatch {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  cursor: pointer;
+}
+
+.color-input {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-family: var(--font);
+  font-size: 13px;
+  width: 100px;
+}
+
+.radio-group {
+  display: flex; gap: 8px;
+}
+
+.radio-btn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.radio-btn.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+.brand-preview {
+  margin-top: 16px;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  transition: all 300ms;
+}
+
+.brand-preview .preview-name { font-size: 20px; font-weight: 700; color: white; }
+.brand-preview .preview-tag { font-size: 13px; color: rgba(255,255,255,0.8); }
+
+.save-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 32px;
+  border-radius: 10px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: all 150ms;
+}
+
+.save-btn:hover { opacity: 0.9; }
+.save-btn:active { transform: scale(0.98); }
+
+/* Toast */
+.ops-toast {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--surface-dark);
+  color: white;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 14px; font-weight: 500;
+  z-index: 200;
+  opacity: 0;
+  transition: all 300ms var(--ease);
+  display: flex; align-items: center; gap: 8px;
+}
+
+.ops-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* Add Item Modal */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.show { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 28px;
+  width: 440px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+
+.modal-field {
+  margin-bottom: 14px;
+}
+
+.modal-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+}
+
+.modal-field input, .modal-field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 200ms;
+}
+
+.modal-field input:focus, .modal-field textarea:focus { border-color: var(--primary); }
+
+.modal-actions {
+  display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px;
+}
+
+.modal-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modal-btn-cancel { background: var(--bg); color: var(--text-secondary); }
+.modal-btn-save { background: var(--primary); color: white; }
+</style>
+</head>
+<body>
+
+<div class="app-layout">
+  <div class="sidebar">
+    <div class="sidebar-logo"><img src="https://1drv.ms/i/c/a1c9420e6c582c0f/IQQakIPQ7M8LQIQGjM5r4BpzAYQq62dU33FMDq6mhVXCMG8?width=1440&height=330" alt="mzenas" style="height:45px"></div>
+    <div class="sidebar-restaurant">El Canton</div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="showSection('tablemap', this)">
+        <span class="material-symbols-rounded">table_restaurant</span> Mapa de mesas
+      </button>
+      <button class="nav-item" onclick="showSection('dashboard', this)">
+        <span class="material-symbols-rounded">dashboard</span> Dashboard
+      </button>
+      <button class="nav-item" onclick="showSection('menu', this)">
+        <span class="material-symbols-rounded">restaurant_menu</span> Gestion de carta
+      </button>
+      <button class="nav-item" onclick="showSection('config', this)">
+        <span class="material-symbols-rounded">settings</span> Configuracion
+      </button>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="nav-item-kitchen" onclick="window.open('restaurant-kitchen.html','_blank')">
+        <span class="material-symbols-rounded">soup_kitchen</span> Vista cocina (KDS)
+      </button>
+    </div>
+  </div>
+
+  <div class="main-content">
+
+    <!-- ==================== TABLE MAP ==================== -->
+    <div class="section active" id="sec-tablemap">
+      <div class="page-header">
+        <h1>Mapa de mesas</h1>
+        <div class="header-actions">
+          <span style="font-size:14px;color:var(--text-secondary);padding:10px" id="tableStats">8/12 mesas ocupadas</span>
+        </div>
+      </div>
+      <div class="table-map-layout">
+        <div class="floor-plan">
+          <div class="floor-plan-stats">
+            <div class="fp-stat"><span class="dot free"></span> Libre</div>
+            <div class="fp-stat"><span class="dot occupied"></span> Ocupada</div>
+            <div class="fp-stat"><span class="dot reserved"></span> Reservada</div>
+          </div>
+          <div class="floor-grid" id="floorGrid"></div>
+        </div>
+        <div class="table-sidebar">
+          <h3>Proximas reservas</h3>
+          <div class="reservation-list">
+            <div class="reservation-card">
+              <div class="res-time">14:00</div>
+              <div class="res-name">Garcia — 4 personas</div>
+              <div class="res-guests">Mesa 4 asignada</div>
+            </div>
+            <div class="reservation-card">
+              <div class="res-time">14:30</div>
+              <div class="res-name">Lopez — 6 personas</div>
+              <div class="res-guests">Mesa 9 asignada</div>
+            </div>
+            <div class="reservation-card">
+              <div class="res-time">15:00</div>
+              <div class="res-name">Martinez — 2 personas</div>
+              <div class="res-guests">Sin mesa asignada</div>
+            </div>
+            <div class="reservation-card">
+              <div class="res-time">20:30</div>
+              <div class="res-name">Fernandez — 8 personas</div>
+              <div class="res-guests">Mesa 11 asignada</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== DASHBOARD ==================== -->
+    <div class="section" id="sec-dashboard">
+      <div class="page-header">
+        <h1>Dashboard</h1>
+        <div class="header-actions">
+          <button class="header-btn"><span class="material-symbols-rounded" style="font-size:18px">calendar_today</span> Hoy</button>
+        </div>
+      </div>
+      <div class="dashboard-content">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Comensales hoy</div>
+            <div class="stat-value" id="statCovers">0</div>
+            <div class="stat-change up">+12% vs ayer</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Ingresos</div>
+            <div class="stat-value" id="statRevenue">0 EUR</div>
+            <div class="stat-change up">+8% vs ayer</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Ticket medio</div>
+            <div class="stat-value" id="statAvg">0 EUR</div>
+            <div class="stat-change up">+3% vs ayer</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Tiempo medio mesa</div>
+            <div class="stat-value" id="statTime">0 min</div>
+            <div class="stat-change down">-5% vs ayer</div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="dash-card">
+            <h3>Pedidos por hora</h3>
+            <div class="chart-container"><canvas id="ordersChart"></canvas></div>
+          </div>
+          <div class="dash-card">
+            <h3>Platos populares</h3>
+            <div class="popular-item">
+              <span class="popular-rank top">1</span>
+              <div class="popular-info"><div class="popular-name">Patatas bravas</div><div class="popular-count">47 pedidos</div></div>
+              <div class="popular-bar"><div class="popular-bar-fill" style="width:100%"></div></div>
+            </div>
+            <div class="popular-item">
+              <span class="popular-rank top">2</span>
+              <div class="popular-info"><div class="popular-name">Croquetas de jamon</div><div class="popular-count">38 pedidos</div></div>
+              <div class="popular-bar"><div class="popular-bar-fill" style="width:81%"></div></div>
+            </div>
+            <div class="popular-item">
+              <span class="popular-rank top">3</span>
+              <div class="popular-info"><div class="popular-name">Pulpo a la gallega</div><div class="popular-count">29 pedidos</div></div>
+              <div class="popular-bar"><div class="popular-bar-fill" style="width:62%"></div></div>
+            </div>
+            <div class="popular-item">
+              <span class="popular-rank">4</span>
+              <div class="popular-info"><div class="popular-name">Ensaladilla rusa</div><div class="popular-count">24 pedidos</div></div>
+              <div class="popular-bar"><div class="popular-bar-fill" style="width:51%"></div></div>
+            </div>
+            <div class="popular-item">
+              <span class="popular-rank">5</span>
+              <div class="popular-info"><div class="popular-name">Gazpacho</div><div class="popular-count">19 pedidos</div></div>
+              <div class="popular-bar"><div class="popular-bar-fill" style="width:40%"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-card" style="margin-top:16px">
+          <h3>Actividad reciente</h3>
+          <div class="activity-feed">
+            <div class="activity-item">
+              <div class="activity-icon payment"><span class="material-symbols-rounded">payments</span></div>
+              <div><div class="activity-text"><strong>Mesa 12</strong> ha pagado — 42,50 EUR</div><div class="activity-time">Hace 2 min</div></div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon order"><span class="material-symbols-rounded">receipt_long</span></div>
+              <div><div class="activity-text">Nuevo pedido de <strong>Mesa 10</strong> — 4 platos</div><div class="activity-time">Hace 5 min</div></div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon order"><span class="material-symbols-rounded">check_circle</span></div>
+              <div><div class="activity-text">Pedido de <strong>Mesa 7</strong> listo para servir</div><div class="activity-time">Hace 8 min</div></div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon reservation"><span class="material-symbols-rounded">event</span></div>
+              <div><div class="activity-text">Nueva reserva: <strong>Garcia</strong> — 4 personas a las 14:00</div><div class="activity-time">Hace 15 min</div></div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon payment"><span class="material-symbols-rounded">payments</span></div>
+              <div><div class="activity-text"><strong>Mesa 5</strong> ha pagado — 38,00 EUR</div><div class="activity-time">Hace 22 min</div></div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon order"><span class="material-symbols-rounded">receipt_long</span></div>
+              <div><div class="activity-text">Nuevo pedido de <strong>Mesa 6</strong> — 3 platos</div><div class="activity-time">Hace 28 min</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MENU MANAGEMENT ==================== -->
+    <div class="section" id="sec-menu">
+      <div class="page-header">
+        <h1>Gestion de carta</h1>
+        <div class="header-actions">
+          <button class="header-btn header-btn-primary" onclick="openAddModal()">
+            <span class="material-symbols-rounded" style="font-size:18px">add</span> Anadir plato
+          </button>
+        </div>
+      </div>
+      <div class="menu-mgmt">
+        <div class="menu-tabs">
+          <button class="menu-tab active" onclick="filterMenuCat(this,'all')">Todos</button>
+          <button class="menu-tab" onclick="filterMenuCat(this,'picar')">Para picar</button>
+          <button class="menu-tab" onclick="filterMenuCat(this,'ensaladas')">Ensaladas</button>
+          <button class="menu-tab" onclick="filterMenuCat(this,'tapas')">Tapas calientes</button>
+          <button class="menu-tab" onclick="filterMenuCat(this,'carnes')">Carnes y pescados</button>
+          <button class="menu-tab" onclick="filterMenuCat(this,'postres')">Postres</button>
+        </div>
+        <div class="menu-table">
+          <div class="menu-table-header">
+            <span></span><span>Plato</span><span>Precio</span><span>Estado</span><span>Activo</span>
+          </div>
+          <div id="menuTableBody"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== CONFIGURATION ==================== -->
+    <div class="section" id="sec-config">
+      <div class="page-header"><h1>Configuracion</h1></div>
+      <div class="config-content">
+        <div class="config-section">
+          <h3>Marca del restaurante</h3>
+          <div class="config-row">
+            <div>
+              <div class="cr-label">Color principal</div>
+              <div class="cr-desc">Se aplica a tu menu digital y perfil</div>
+            </div>
+            <div class="color-preview">
+              <input type="color" class="color-swatch" id="brandColor" value="#1A1A1A" onchange="updateBrandPreview()">
+              <input type="text" class="color-input" id="brandColorText" value="#1A1A1A" onchange="document.getElementById('brandColor').value=this.value;updateBrandPreview()">
+            </div>
+          </div>
+          <div class="brand-preview" id="brandPreview" style="background:#1A1A1A">
+            <div class="preview-name">EL CANTON</div>
+            <div class="preview-tag">Tapas mediterraneas</div>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3>Modo de pago</h3>
+          <div class="config-row">
+            <div>
+              <div class="cr-label">Cuando cobra el cliente?</div>
+              <div class="cr-desc">Define cuando se procesa el pago</div>
+            </div>
+            <div class="radio-group">
+              <button class="radio-btn active" onclick="selectRadio(this)">Al final</button>
+              <button class="radio-btn" onclick="selectRadio(this)">Por comanda</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <h3>Servicio</h3>
+          <div class="config-row">
+            <div>
+              <div class="cr-label">Turno doble</div>
+              <div class="cr-desc">Permite gestionar dos turnos de servicio</div>
+            </div>
+            <button class="toggle-sm on" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="config-row">
+            <div>
+              <div class="cr-label">Propinas digitales</div>
+              <div class="cr-desc">Permite al cliente dejar propina al pagar</div>
+            </div>
+            <button class="toggle-sm on" onclick="this.classList.toggle('on')"></button>
+          </div>
+          <div class="config-row">
+            <div>
+              <div class="cr-label">Notificaciones de cocina</div>
+              <div class="cr-desc">Avisa al cliente cuando su pedido esta listo</div>
+            </div>
+            <button class="toggle-sm on" onclick="this.classList.toggle('on')"></button>
+          </div>
+        </div>
+
+        <button class="save-btn" onclick="saveConfig()">
+          <span class="material-symbols-rounded">save</span> Guardar cambios
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Table Popover -->
+<div class="table-popover" id="tablePopover">
+  <h4 id="popoverTitle">Mesa 7</h4>
+  <div id="popoverContent"></div>
+  <div class="popover-actions">
+    <button class="popover-btn popover-btn-close" onclick="closePopover()">Cerrar</button>
+    <button class="popover-btn popover-btn-free" id="popoverFreeBtn" onclick="freeTable()">Liberar mesa</button>
+  </div>
+</div>
+
+<!-- Add Item Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h3>Anadir plato</h3>
+    <div class="modal-field"><label>Nombre</label><input type="text" placeholder="Ej: Tortilla espanola"></div>
+    <div class="modal-field"><label>Descripcion</label><textarea rows="2" placeholder="Descripcion breve del plato"></textarea></div>
+    <div class="modal-field"><label>Precio (EUR)</label><input type="text" placeholder="12,50"></div>
+    <div class="modal-field"><label>Categoria</label><input type="text" placeholder="Para picar, Ensaladas..."></div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="closeAddModal()">Cancelar</button>
+      <button class="modal-btn modal-btn-save" onclick="closeAddModal(); showOpsToast('Plato anadido correctamente')">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="ops-toast" id="opsToast"><span class="material-symbols-rounded">check_circle</span><span id="opsToastText"></span></div>
+
+<script>
+const TABLES = [
+  { num: 1, type: '4-top', status: 'occupied', time: '42 min', order: '38,50 EUR', items: 'Gazpacho, Tortilla, Jamon iberico' },
+  { num: 2, type: '2-top', status: 'occupied', time: '28 min', order: '24,00 EUR', items: 'Croquetas, Bravas, Ensalada' },
+  { num: 3, type: '4-top', status: 'occupied', time: '55 min', order: '62,00 EUR', items: 'Pulpo, Ensalada, Chuleton' },
+  { num: 4, type: '4-top', status: 'reserved', time: '', order: '', items: 'Reserva Garcia — 14:00' },
+  { num: 5, type: '2-top', status: 'occupied', time: '35 min', order: '29,50 EUR', items: 'Croquetas, Bravas, Calamares' },
+  { num: 6, type: '2-top', status: 'occupied', time: '18 min', order: '22,00 EUR', items: 'Gazpacho, Solomillo x2' },
+  { num: 7, type: '4-top', status: 'occupied', time: '12 min', order: '31,00 EUR', items: 'Bravas, Croquetas, Pulpo' },
+  { num: 8, type: '2-top', status: 'occupied', time: '22 min', order: '18,50 EUR', items: 'Ensaladilla, Gambas al ajillo' },
+  { num: 9, type: '6-top', status: 'reserved', time: '', order: '', items: 'Reserva Lopez — 14:30' },
+  { num: 10, type: '4-top', status: 'occupied', time: '5 min', order: '0,00 EUR', items: 'Pedido recien enviado' },
+  { num: 11, type: '6-top', status: 'free', time: '', order: '', items: '' },
+  { num: 12, type: '2-top', status: 'free', time: '', order: '', items: '' },
+];
+
+const MENU_ITEMS = [
+  { name: 'Patatas bravas', cat: 'picar', price: '7,50', img: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=100&q=60', available: true },
+  { name: 'Croquetas de jamon', cat: 'picar', price: '8,50', img: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=100&q=60', available: true },
+  { name: 'Aceitunas alinadas', cat: 'picar', price: '4,50', img: 'https://images.unsplash.com/photo-1593030103066-0093718e7177?w=100&q=60', available: true },
+  { name: 'Jamon iberico', cat: 'picar', price: '16,00', img: 'https://images.unsplash.com/photo-1600891964092-4316c288032e?w=100&q=60', available: true },
+  { name: 'Pan con tomate', cat: 'picar', price: '4,00', img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?w=100&q=60', available: true },
+  { name: 'Ensalada mixta', cat: 'ensaladas', price: '9,00', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=100&q=60', available: true },
+  { name: 'Ensalada cesar', cat: 'ensaladas', price: '11,00', img: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=100&q=60', available: true },
+  { name: 'Pulpo a la gallega', cat: 'tapas', price: '14,00', img: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=100&q=60', available: true },
+  { name: 'Gambas al ajillo', cat: 'tapas', price: '12,50', img: 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=100&q=60', available: true },
+  { name: 'Calamares a la romana', cat: 'tapas', price: '10,00', img: 'https://images.unsplash.com/photo-1604909052743-94e838986d24?w=100&q=60', available: true },
+  { name: 'Chuleton de ternera', cat: 'carnes', price: '22,00', img: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=100&q=60', available: true },
+  { name: 'Solomillo iberico', cat: 'carnes', price: '19,00', img: 'https://images.unsplash.com/photo-1558030006-450675393462?w=100&q=60', available: true },
+  { name: 'Tarta de queso', cat: 'postres', price: '6,50', img: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=100&q=60', available: true },
+  { name: 'Crema catalana', cat: 'postres', price: '5,50', img: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=100&q=60', available: true },
+];
+
+let currentMenuCat = 'all';
+let selectedTableNum = null;
+
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  btn.classList.add('active');
+  closePopover();
+
+  if (id === 'dashboard') initDashboard();
+}
+
+function renderFloorPlan() {
+  const grid = document.getElementById('floorGrid');
+  grid.innerHTML = TABLES.map(t => `
+    <div class="table-spot ${t.status}" onclick="openTablePopover(${t.num}, event)" data-table="${t.num}">
+      ${t.time ? `<span class="time-badge">${t.time}</span>` : ''}
+      <span class="table-num">${t.num}</span>
+      <span class="table-type">${t.type}</span>
+      <span class="table-status-label">${t.status === 'free' ? 'Libre' : t.status === 'occupied' ? 'Ocupada' : 'Reservada'}</span>
+    </div>
+  `).join('');
+
+  const occ = TABLES.filter(t => t.status === 'occupied').length;
+  document.getElementById('tableStats').textContent = `${occ}/${TABLES.length} mesas ocupadas`;
+}
+
+function openTablePopover(num, e) {
+  const table = TABLES.find(t => t.num === num);
+  if (!table) return;
+  selectedTableNum = num;
+
+  document.getElementById('popoverTitle').textContent = `Mesa ${num}`;
+
+  if (table.status === 'occupied') {
+    document.getElementById('popoverContent').innerHTML = `
+      <div class="popover-row"><span class="label">Tiempo</span><span>${table.time}</span></div>
+      <div class="popover-row"><span class="label">Pedido</span><span>${table.order}</span></div>
+      <div class="popover-row"><span class="label">Platos</span><span>${table.items}</span></div>
+    `;
+    document.getElementById('popoverFreeBtn').style.display = '';
+  } else if (table.status === 'reserved') {
+    document.getElementById('popoverContent').innerHTML = `
+      <div class="popover-row"><span class="label">Reserva</span><span>${table.items}</span></div>
+    `;
+    document.getElementById('popoverFreeBtn').style.display = 'none';
+  } else {
+    document.getElementById('popoverContent').innerHTML = `
+      <div class="popover-row"><span class="label">Estado</span><span>Disponible</span></div>
+    `;
+    document.getElementById('popoverFreeBtn').style.display = 'none';
+  }
+
+  const popover = document.getElementById('tablePopover');
+  const rect = e.currentTarget.getBoundingClientRect();
+  popover.style.top = (rect.bottom + 8) + 'px';
+  popover.style.left = Math.min(rect.left, window.innerWidth - 320) + 'px';
+  popover.classList.add('show');
+}
+
+function closePopover() {
+  document.getElementById('tablePopover').classList.remove('show');
+  selectedTableNum = null;
+}
+
+function freeTable() {
+  if (selectedTableNum === null) return;
+  const num = selectedTableNum;
+  const table = TABLES.find(t => t.num === num);
+  if (table) {
+    table.status = 'free';
+    table.time = '';
+    table.order = '';
+    table.items = '';
+  }
+  closePopover();
+  renderFloorPlan();
+  showOpsToast(`Mesa ${num} liberada`);
+}
+
+function initDashboard() {
+  animateCounter('statCovers', 87, ' ');
+  animateCounter('statRevenue', 2847, ' EUR', '');
+  animateCounter('statAvg', 32, ' EUR', '');
+  animateCounter('statTime', 42, ' min', '');
+
+  const ctx = document.getElementById('ordersChart');
+  if (ctx._chart) ctx._chart.destroy();
+  ctx._chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00'],
+      datasets: [{
+        label: 'Pedidos',
+        data: [3, 7, 12, 18, 15, 11, 8, 5, 2],
+        backgroundColor: '#1A1A1A',
+        borderRadius: 6,
+        barThickness: 28,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 12 } } },
+        y: { grid: { color: '#F0ECE8' }, ticks: { font: { family: 'Inter', size: 12 } }, beginAtZero: true }
+      },
+      animation: { duration: 800, easing: 'easeOutQuart' }
+    }
+  });
+}
+
+function animateCounter(id, target, suffix, prefix) {
+  const el = document.getElementById(id);
+  let current = 0;
+  const step = Math.ceil(target / 30);
+  const interval = setInterval(() => {
+    current += step;
+    if (current >= target) { current = target; clearInterval(interval); }
+    el.textContent = (prefix || '') + current.toLocaleString('es-ES') + (suffix || '');
+  }, 30);
+}
+
+function renderMenuTable() {
+  const body = document.getElementById('menuTableBody');
+  const items = currentMenuCat === 'all' ? MENU_ITEMS : MENU_ITEMS.filter(i => i.cat === currentMenuCat);
+  body.innerHTML = items.map((item, idx) => `
+    <div class="menu-table-row">
+      <img class="menu-row-img" src="${item.img}" alt="">
+      <div class="menu-row-info">
+        <div class="name">${item.name}</div>
+        <div class="category">${catLabel(item.cat)}</div>
+      </div>
+      <span class="menu-row-price">${item.price} EUR</span>
+      <span class="menu-row-status ${item.available ? 'available' : 'unavailable'}">${item.available ? 'Disponible' : 'Agotado'}</span>
+      <button class="toggle-sm ${item.available ? 'on' : ''}" onclick="toggleMenuItem(${MENU_ITEMS.indexOf(item)})"></button>
+    </div>
+  `).join('');
+}
+
+function catLabel(cat) {
+  const map = { picar: 'Para picar', ensaladas: 'Ensaladas', tapas: 'Tapas calientes', carnes: 'Carnes y pescados', postres: 'Postres' };
+  return map[cat] || cat;
+}
+
+function filterMenuCat(btn, cat) {
+  document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  currentMenuCat = cat;
+  renderMenuTable();
+}
+
+function toggleMenuItem(idx) {
+  MENU_ITEMS[idx].available = !MENU_ITEMS[idx].available;
+  renderMenuTable();
+  const name = MENU_ITEMS[idx].name;
+  showOpsToast(MENU_ITEMS[idx].available ? `${name} disponible` : `${name} marcado como agotado`);
+}
+
+function openAddModal() { document.getElementById('addModal').classList.add('show'); }
+function closeAddModal() { document.getElementById('addModal').classList.remove('show'); }
+
+function updateBrandPreview() {
+  const color = document.getElementById('brandColor').value;
+  document.getElementById('brandColorText').value = color;
+  document.getElementById('brandPreview').style.background = color;
+}
+
+function selectRadio(btn) {
+  btn.parentElement.querySelectorAll('.radio-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function saveConfig() {
+  showOpsToast('Configuracion guardada correctamente');
+}
+
+function showOpsToast(msg) {
+  const toast = document.getElementById('opsToast');
+  document.getElementById('opsToastText').textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+document.addEventListener('click', (e) => {
+  const popover = document.getElementById('tablePopover');
+  if (popover.classList.contains('show') && !popover.contains(e.target) && !e.target.closest('.table-spot')) {
+    closePopover();
+  }
+});
+
+renderFloorPlan();
+renderMenuTable();
+</script>
+</body>
+</html>

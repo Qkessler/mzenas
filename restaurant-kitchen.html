@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mzenas — KDS · El Canton</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@20..48,100..700,0..1" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: #1A1A1A;
+  --accent: #E07856;
+  --accent-light: #F5D0C3;
+  --bg: #0D0D0D;
+  --surface: #1A1A1A;
+  --surface-2: #252525;
+  --text-primary: #F5F5F5;
+  --text-secondary: #9E9E9E;
+  --success: #4CAF50;
+  --warning: #FFA726;
+  --error: #EF5350;
+  --border: #333333;
+  --font: 'Inter', -apple-system, system-ui, sans-serif;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html, body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text-primary);
+  height: 100%; overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.kds-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Top Bar */
+.kds-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.kds-header .left {
+  display: flex; align-items: center; gap: 12px;
+}
+
+.kds-header .logo {
+  font-size: 20px; font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.kds-header .restaurant-tag {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.kds-header .center {
+  display: flex; align-items: center; gap: 24px;
+}
+
+.kds-header .stat {
+  text-align: center;
+}
+
+.kds-header .stat .num {
+  font-size: 24px; font-weight: 700;
+}
+
+.kds-header .stat .label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kds-header .right {
+  display: flex; align-items: center; gap: 16px;
+}
+
+.kds-header .clock {
+  font-size: 20px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.kds-header .sound-btn {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: none;
+  color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+
+/* Filter Tabs */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.filter-tab {
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.filter-tab.active {
+  background: var(--text-primary);
+  color: var(--bg);
+  border-color: var(--text-primary);
+}
+
+.filter-tab .count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px; height: 20px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.15);
+  font-size: 12px;
+  margin-left: 6px;
+  padding: 0 6px;
+}
+
+.filter-tab.active .count {
+  background: rgba(0,0,0,0.2);
+}
+
+/* Ticket Grid */
+.tickets-grid {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+
+.tickets-grid::-webkit-scrollbar { width: 6px; }
+.tickets-grid::-webkit-scrollbar-track { background: transparent; }
+.tickets-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Ticket Card */
+.ticket {
+  background: var(--surface);
+  border-radius: 12px;
+  border-left: 4px solid var(--success);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 200ms var(--ease);
+}
+
+.ticket:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+.ticket:active { transform: scale(0.98); }
+
+.ticket.status-new { border-left-color: var(--success); }
+.ticket.status-progress { border-left-color: var(--warning); }
+.ticket.status-late { border-left-color: var(--error); }
+.ticket.status-ready { border-left-color: #42A5F5; opacity: 0.6; }
+
+.ticket-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ticket-header .table-num {
+  font-size: 18px; font-weight: 700;
+}
+
+.ticket-header .timer {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.ticket.status-new .timer { background: rgba(76,175,80,0.15); color: var(--success); }
+.ticket.status-progress .timer { background: rgba(255,167,38,0.15); color: var(--warning); }
+.ticket.status-late .timer { background: rgba(239,83,80,0.15); color: var(--error); }
+.ticket.status-ready .timer { background: rgba(66,165,245,0.15); color: #42A5F5; }
+
+.ticket-header .order-time {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.ticket-body { padding: 12px 14px; }
+
+.ticket-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 14px;
+}
+
+.ticket-item .qty {
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 24px;
+}
+
+.ticket-item .item-name { flex: 1; }
+
+.ticket-item.priority {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.ticket-item.priority::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.ticket-item .check {
+  width: 20px; height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 150ms;
+}
+
+.ticket-item.done .check {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.ticket-item.done .check::after {
+  content: '✓';
+  color: white;
+  font-size: 12px;
+}
+
+.ticket-item.done .item-name {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.ticket-footer {
+  padding: 8px 14px 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.ticket-footer .special {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(255,167,38,0.12);
+  color: var(--warning);
+}
+
+/* Slide-Over Panel */
+.panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms;
+}
+
+.panel-overlay.show { opacity: 1; pointer-events: auto; }
+
+.detail-panel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: 420px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  z-index: 101;
+  transform: translateX(100%);
+  transition: transform 300ms var(--ease);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.detail-panel.show { transform: translateX(0); }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.panel-header h2 { font-size: 20px; font-weight: 700; }
+
+.panel-close {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: none;
+  color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+
+.panel-meta {
+  padding: 16px 24px;
+  display: flex;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.panel-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.panel-meta-item .material-symbols-rounded { font-size: 18px; }
+
+.panel-items {
+  padding: 0 24px;
+  flex: 1;
+}
+
+.panel-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: opacity 200ms;
+}
+
+.panel-item:last-child { border-bottom: none; }
+
+.panel-item .pi-check {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 200ms;
+}
+
+.panel-item.checked .pi-check {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.panel-item.checked .pi-check .material-symbols-rounded { color: white; font-size: 18px; }
+.panel-item.checked .pi-info { opacity: 0.4; text-decoration: line-through; }
+
+.panel-item .pi-info { flex: 1; }
+.panel-item .pi-name { font-size: 15px; font-weight: 500; }
+.panel-item .pi-qty { font-size: 13px; color: var(--text-secondary); }
+
+.panel-item.priority-item { background: rgba(224,120,86,0.08); margin: 0 -24px; padding: 14px 24px; border-radius: 8px; }
+.panel-item.priority-item .pi-name { color: var(--accent); }
+
+.panel-special {
+  margin: 16px 24px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(255,167,38,0.1);
+  border-left: 3px solid var(--warning);
+  flex-shrink: 0;
+}
+
+.panel-special .label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--warning);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.panel-special .text { font-size: 14px; color: var(--text-primary); }
+
+.panel-actions {
+  padding: 20px 24px;
+  display: flex;
+  gap: 10px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.panel-btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 150ms;
+}
+
+.panel-btn-primary {
+  background: var(--success);
+  color: white;
+}
+
+.panel-btn-primary:hover { opacity: 0.9; }
+.panel-btn-primary:active { transform: scale(0.98); }
+
+.panel-btn-secondary {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+/* Toast */
+.kds-toast {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--text-primary);
+  color: var(--bg);
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 14px; font-weight: 500;
+  z-index: 200;
+  opacity: 0;
+  transition: all 300ms var(--ease);
+  display: flex; align-items: center; gap: 8px;
+}
+
+.kds-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.kds-toast .material-symbols-rounded { font-size: 20px; }
+
+/* New order animation */
+@keyframes slide-in-bounce {
+  0% { transform: translateY(-40px); opacity: 0; }
+  60% { transform: translateY(6px); opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.ticket.new-arrival { animation: slide-in-bounce 500ms var(--ease) both; }
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(76,175,80,0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(76,175,80,0); }
+}
+
+.ticket.status-new { animation: glow-pulse 2s ease-in-out 3; }
+.ticket.new-arrival.status-new { animation: slide-in-bounce 500ms var(--ease) both, glow-pulse 2s ease-in-out 1s 3; }
+</style>
+</head>
+<body>
+
+<div class="kds-layout">
+  <div class="kds-header">
+    <div class="left">
+      <img src="https://1drv.ms/i/c/a1c9420e6c582c0f/IQQakIPQ7M8LQIQGjM5r4BpzAYQq62dU33FMDq6mhVXCMG8?width=1440&height=330" alt="mzenas" style="height:40px">
+      <span class="restaurant-tag">El Canton</span>
+    </div>
+    <div class="center">
+      <div class="stat">
+        <div class="num" id="activeCount">8</div>
+        <div class="label">Activos</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="readyCount">3</div>
+        <div class="label">Listos</div>
+      </div>
+      <div class="stat">
+        <div class="num" style="color: var(--error)" id="lateCount">1</div>
+        <div class="label">Retrasados</div>
+      </div>
+    </div>
+    <div class="right">
+      <span class="clock" id="clock">13:47</span>
+      <button class="sound-btn"><span class="material-symbols-rounded">volume_up</span></button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-tab active" onclick="filterTickets(this, 'all')">Todos <span class="count" id="countAll">8</span></button>
+    <button class="filter-tab" onclick="filterTickets(this, 'new')">Nuevos <span class="count" id="countNew">3</span></button>
+    <button class="filter-tab" onclick="filterTickets(this, 'progress')">En curso <span class="count" id="countProgress">4</span></button>
+    <button class="filter-tab" onclick="filterTickets(this, 'ready')">Listos <span class="count" id="countReady">1</span></button>
+  </div>
+
+  <div class="tickets-grid" id="ticketsGrid"></div>
+</div>
+
+<div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+
+<div class="detail-panel" id="detailPanel">
+  <div class="panel-header">
+    <h2 id="panelTitle">Mesa 7</h2>
+    <button class="panel-close" onclick="closePanel()"><span class="material-symbols-rounded">close</span></button>
+  </div>
+  <div class="panel-meta" id="panelMeta"></div>
+  <div class="panel-items" id="panelItems"></div>
+  <div id="panelSpecial"></div>
+  <div class="panel-actions">
+    <button class="panel-btn panel-btn-secondary" onclick="notifyCustomer()">
+      <span class="material-symbols-rounded">notifications</span> Notificar
+    </button>
+    <button class="panel-btn panel-btn-primary" id="markReadyBtn" onclick="markOrderReady()">
+      <span class="material-symbols-rounded">check_circle</span> Marcar como listo
+    </button>
+  </div>
+</div>
+
+<div class="kds-toast" id="kdsToast">
+  <span class="material-symbols-rounded">check_circle</span>
+  <span id="kdsToastText"></span>
+</div>
+
+<script>
+const ORDERS = [
+  {
+    id: 1, table: 'Mesa 3', time: '13:12', status: 'late', elapsed: 35,
+    items: [
+      { name: 'Pulpo a la gallega', qty: 1, done: true },
+      { name: 'Ensalada mixta', qty: 2, done: true },
+      { name: 'Chuleton de ternera', qty: 1, done: false, priority: true }
+    ],
+    special: 'Sin gluten — alergia celiaca'
+  },
+  {
+    id: 2, table: 'Mesa 5', time: '13:22', status: 'progress', elapsed: 25,
+    items: [
+      { name: 'Croquetas de jamon', qty: 2, done: true },
+      { name: 'Patatas bravas', qty: 1, done: false },
+      { name: 'Calamares a la romana', qty: 1, done: false }
+    ],
+    special: null
+  },
+  {
+    id: 3, table: 'Mesa 1', time: '13:28', status: 'progress', elapsed: 19,
+    items: [
+      { name: 'Gazpacho', qty: 2, done: false },
+      { name: 'Tortilla espanola', qty: 1, done: false },
+      { name: 'Jamon iberico', qty: 1, done: true }
+    ],
+    special: 'Tortilla poco hecha'
+  },
+  {
+    id: 4, table: 'Mesa 8', time: '13:31', status: 'progress', elapsed: 16,
+    items: [
+      { name: 'Ensaladilla rusa', qty: 1, done: false },
+      { name: 'Gambas al ajillo', qty: 1, done: false }
+    ],
+    special: null
+  },
+  {
+    id: 5, table: 'Mesa 12', time: '13:15', status: 'ready', elapsed: 32,
+    items: [
+      { name: 'Pan con tomate', qty: 2, done: true },
+      { name: 'Aceitunas alinadas', qty: 1, done: true },
+      { name: 'Tabla de quesos', qty: 1, done: true }
+    ],
+    special: null
+  },
+  {
+    id: 6, table: 'Mesa 2', time: '13:35', status: 'progress', elapsed: 12,
+    items: [
+      { name: 'Croquetas de jamon', qty: 1, done: false },
+      { name: 'Patatas bravas', qty: 2, done: false, priority: true },
+      { name: 'Ensalada cesar', qty: 1, done: false }
+    ],
+    special: null
+  },
+  {
+    id: 7, table: 'Mesa 7', time: '13:38', status: 'new', elapsed: 9,
+    items: [
+      { name: 'Patatas bravas', qty: 1, done: false, priority: true },
+      { name: 'Croquetas de jamon', qty: 2, done: false },
+      { name: 'Pulpo a la gallega', qty: 1, done: false }
+    ],
+    special: 'Sin cebolla en las bravas'
+  },
+  {
+    id: 8, table: 'Mesa 6', time: '13:40', status: 'new', elapsed: 7,
+    items: [
+      { name: 'Gazpacho', qty: 1, done: false },
+      { name: 'Solomillo iberico', qty: 2, done: false }
+    ],
+    special: 'Solomillo al punto'
+  }
+];
+
+let currentFilter = 'all';
+let selectedOrder = null;
+
+function renderTickets() {
+  const grid = document.getElementById('ticketsGrid');
+  const filtered = currentFilter === 'all'
+    ? ORDERS
+    : ORDERS.filter(o => {
+        if (currentFilter === 'new') return o.status === 'new';
+        if (currentFilter === 'progress') return o.status === 'progress';
+        if (currentFilter === 'ready') return o.status === 'ready';
+        return true;
+      });
+
+  grid.innerHTML = filtered.map(order => `
+    <div class="ticket status-${order.status}" onclick="openPanel(${order.id})" data-id="${order.id}">
+      <div class="ticket-header">
+        <span class="table-num">${order.table}</span>
+        <span class="timer" id="timer-${order.id}">${order.elapsed} min</span>
+      </div>
+      <div class="ticket-body">
+        ${order.items.map(item => `
+          <div class="ticket-item ${item.done ? 'done' : ''} ${item.priority ? 'priority' : ''}">
+            <span class="qty">${item.qty}x</span>
+            <span class="item-name">${item.name}</span>
+            <span class="check"></span>
+          </div>
+        `).join('')}
+      </div>
+      ${order.special ? `<div class="ticket-footer"><span class="special">${order.special}</span></div>` : ''}
+    </div>
+  `).join('');
+
+  updateCounts();
+}
+
+function updateCounts() {
+  document.getElementById('countAll').textContent = ORDERS.length;
+  document.getElementById('countNew').textContent = ORDERS.filter(o => o.status === 'new').length;
+  document.getElementById('countProgress').textContent = ORDERS.filter(o => o.status === 'progress').length;
+  document.getElementById('countReady').textContent = ORDERS.filter(o => o.status === 'ready').length;
+  document.getElementById('activeCount').textContent = ORDERS.filter(o => o.status !== 'ready').length;
+  document.getElementById('readyCount').textContent = ORDERS.filter(o => o.status === 'ready').length;
+  document.getElementById('lateCount').textContent = ORDERS.filter(o => o.status === 'late').length;
+}
+
+function filterTickets(btn, filter) {
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = filter;
+  renderTickets();
+}
+
+function openPanel(orderId) {
+  const order = ORDERS.find(o => o.id === orderId);
+  if (!order) return;
+  selectedOrder = order;
+
+  document.getElementById('panelTitle').textContent = order.table;
+  document.getElementById('panelMeta').innerHTML = `
+    <div class="panel-meta-item"><span class="material-symbols-rounded">schedule</span> ${order.time}</div>
+    <div class="panel-meta-item"><span class="material-symbols-rounded">timer</span> ${order.elapsed} min</div>
+    <div class="panel-meta-item"><span class="material-symbols-rounded">restaurant</span> ${order.items.length} platos</div>
+  `;
+
+  document.getElementById('panelItems').innerHTML = order.items.map((item, idx) => `
+    <div class="panel-item ${item.done ? 'checked' : ''} ${item.priority ? 'priority-item' : ''}" onclick="togglePanelItem(${orderId}, ${idx})">
+      <div class="pi-check">${item.done ? '<span class="material-symbols-rounded">check</span>' : ''}</div>
+      <div class="pi-info">
+        <div class="pi-name">${item.name}</div>
+        <div class="pi-qty">${item.qty}x${item.priority ? ' · Prioridad' : ''}</div>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('panelSpecial').innerHTML = order.special
+    ? `<div class="panel-special"><div class="label">Notas del cliente</div><div class="text">${order.special}</div></div>`
+    : '';
+
+  const allDone = order.items.every(i => i.done);
+  document.getElementById('markReadyBtn').style.opacity = allDone ? '1' : '0.5';
+
+  document.getElementById('panelOverlay').classList.add('show');
+  document.getElementById('detailPanel').classList.add('show');
+}
+
+function closePanel() {
+  document.getElementById('panelOverlay').classList.remove('show');
+  document.getElementById('detailPanel').classList.remove('show');
+  selectedOrder = null;
+}
+
+function togglePanelItem(orderId, itemIdx) {
+  const order = ORDERS.find(o => o.id === orderId);
+  if (!order) return;
+  order.items[itemIdx].done = !order.items[itemIdx].done;
+  openPanel(orderId);
+  renderTickets();
+}
+
+function markOrderReady() {
+  if (!selectedOrder) return;
+  const allDone = selectedOrder.items.every(i => i.done);
+  if (!allDone) {
+    selectedOrder.items.forEach(i => i.done = true);
+  }
+  selectedOrder.status = 'ready';
+  closePanel();
+  renderTickets();
+  showKdsToast(`${selectedOrder.table} marcado como listo`);
+}
+
+function notifyCustomer() {
+  if (!selectedOrder) return;
+  showKdsToast(`Notificacion enviada a ${selectedOrder.table}`);
+}
+
+function showKdsToast(msg) {
+  const toast = document.getElementById('kdsToast');
+  document.getElementById('kdsToastText').textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  document.getElementById('clock').textContent = `${h}:${m}`;
+}
+
+function startTimers() {
+  setInterval(() => {
+    ORDERS.forEach(order => {
+      if (order.status === 'ready') return;
+      order.elapsed++;
+      const timerEl = document.getElementById(`timer-${order.id}`);
+      if (timerEl) timerEl.textContent = `${order.elapsed} min`;
+
+      if (order.status === 'new' && order.elapsed >= 10) order.status = 'progress';
+      if (order.status === 'progress' && order.elapsed >= 25) order.status = 'late';
+    });
+    renderTickets();
+  }, 60000);
+}
+
+function addNewOrder() {
+  const newOrder = {
+    id: ORDERS.length + 1,
+    table: 'Mesa 10',
+    time: new Date().getHours().toString().padStart(2, '0') + ':' + new Date().getMinutes().toString().padStart(2, '0'),
+    status: 'new',
+    elapsed: 0,
+    items: [
+      { name: 'Aceitunas alinadas', qty: 1, done: false },
+      { name: 'Patatas bravas', qty: 2, done: false, priority: true },
+      { name: 'Croquetas de jamon', qty: 1, done: false },
+      { name: 'Ensalada mixta', qty: 1, done: false }
+    ],
+    special: 'Alioli extra en las bravas'
+  };
+  ORDERS.push(newOrder);
+  renderTickets();
+
+  setTimeout(() => {
+    const el = document.querySelector(`[data-id="${newOrder.id}"]`);
+    if (el) el.classList.add('new-arrival');
+  }, 50);
+
+  showKdsToast('Nuevo pedido — Mesa 10');
+}
+
+renderTickets();
+updateClock();
+setInterval(updateClock, 30000);
+startTimers();
+setTimeout(addNewOrder, 3000);
+</script>
+</body>
+</html>

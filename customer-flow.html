@@ -1,0 +1,2467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mzenas — El Canton</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@20..48,100..700,0..1" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: #1A1A1A;
+  --primary-dark: #000000;
+  --primary-light: #F5F5F5;
+  --accent: #E07856;
+  --accent-light: #F5D0C3;
+  --bg: #FFFFFF;
+  --surface: #F8F6F3;
+  --surface-dark: #1A1A1A;
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B6B6B;
+  --text-on-primary: #FFFFFF;
+  --success: #4CAF50;
+  --warning: #FFA726;
+  --error: #EF5350;
+  --border: #E8E4DF;
+  --border-light: #F0ECE8;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration: 300ms;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+html, body {
+  font-family: var(--font);
+  background: #F0F0F0;
+  color: var(--text-primary);
+  height: 100%;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.device-frame {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 375px; height: 812px;
+  background: var(--bg);
+  border-radius: 40px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.device-frame::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 150px; height: 30px;
+  background: var(--primary);
+  border-radius: 0 0 20px 20px;
+  z-index: 1000;
+}
+
+.screen-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  transform: translateX(100%);
+  transition: transform var(--duration) var(--ease), opacity var(--duration) var(--ease);
+  opacity: 0;
+  z-index: 1;
+}
+
+.screen.active {
+  transform: translateX(0);
+  opacity: 1;
+  z-index: 2;
+}
+
+.screen.exit-left {
+  transform: translateX(-30%);
+  opacity: 0.5;
+}
+
+.screen::-webkit-scrollbar { display: none; }
+.screen { scroll-behavior: smooth; }
+
+.section-header[id] {
+  scroll-margin-top: 120px;
+}
+
+/* Top Bar */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  padding: 40px 16px 12px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border-light);
+  min-height: 56px;
+}
+
+.top-bar .back-btn {
+  background: none; border: none;
+  cursor: pointer; padding: 4px;
+  display: flex; align-items: center;
+  color: var(--text-primary);
+}
+
+.top-bar .title {
+  flex: 1;
+  font-size: 17px; font-weight: 600;
+  text-align: center;
+  margin: 0 8px;
+}
+
+.top-bar .action-btn {
+  background: none; border: none;
+  cursor: pointer; padding: 4px;
+  color: var(--text-secondary);
+}
+
+/* Buttons */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--text-on-primary);
+}
+
+.btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1.5px solid var(--border);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-v { background: #E8F5E9; color: #2E7D32; }
+.badge-gf { background: #FFF3E0; color: #E65100; }
+.badge-popular { background: var(--accent-light); color: var(--accent); }
+
+/* Toast */
+.toast {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--surface-dark);
+  color: var(--text-on-primary);
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1000;
+  opacity: 0;
+  transition: all 300ms var(--ease);
+  white-space: nowrap;
+  box-shadow: var(--shadow-lg);
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* Cart FAB */
+.cart-fab {
+  position: absolute;
+  bottom: 24px;
+  right: 16px;
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  transition: all 200ms var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cart-fab:active { transform: scale(0.92); }
+
+.cart-fab .count {
+  position: absolute;
+  top: -4px; right: -4px;
+  width: 22px; height: 22px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: white;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.cart-fab.hidden { transform: scale(0); opacity: 0; pointer-events: none; }
+
+/* Bottom Sheet */
+.bottom-sheet-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration) var(--ease);
+}
+
+.bottom-sheet-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.bottom-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transform: translateY(100%);
+  max-height: 85%;
+  background: var(--bg);
+  border-radius: 24px 24px 0 0;
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+  transition: transform 400ms var(--ease);
+}
+
+.bottom-sheet-scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bottom-sheet-footer {
+  padding: 12px 20px 24px;
+  background: var(--bg);
+  border-top: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+
+.bottom-sheet.show {
+  transform: translateY(0);
+}
+
+.bottom-sheet .handle {
+  width: 36px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 8px auto 0;
+}
+
+/* Confetti */
+.confetti-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 500;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  animation: confetti-fall 2.5s ease-out forwards;
+}
+
+@keyframes confetti-fall {
+  0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(800px) rotate(720deg); opacity: 0; }
+}
+
+/* Progress Tracker */
+.progress-tracker {
+  padding: 0 0 0 32px;
+  position: relative;
+}
+
+.progress-tracker::before {
+  content: '';
+  position: absolute;
+  left: 11px; top: 4px; bottom: 4px;
+  width: 2px;
+  background: var(--border);
+}
+
+.progress-step {
+  position: relative;
+  padding: 0 0 24px 24px;
+}
+
+.progress-step:last-child { padding-bottom: 0; }
+
+.progress-step .dot {
+  position: absolute;
+  left: -27px; top: 2px;
+  width: 18px; height: 18px;
+  border-radius: 999px;
+  background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1;
+}
+
+.progress-step.done .dot { background: var(--success); }
+.progress-step.active .dot { background: var(--primary); animation: pulse 1.5s infinite; }
+
+.progress-step .dot .material-symbols-rounded { font-size: 14px; color: white; }
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(26,26,26,0.3); }
+  50% { box-shadow: 0 0 0 6px rgba(26,26,26,0); }
+}
+
+.progress-step .label { font-size: 15px; font-weight: 500; }
+.progress-step .sub { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+/* ==================== SCREEN: LANDING ==================== */
+#landing {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.landing-hero {
+  position: relative;
+  height: 480px;
+  background: url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=750&q=80') center/cover;
+}
+
+.landing-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.7) 100%);
+}
+
+.landing-hero-content {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 24px;
+  z-index: 2;
+  color: white;
+}
+
+.landing-hero-content .restaurant-name {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.landing-hero-content .tagline {
+  font-size: 15px;
+  font-weight: 400;
+  opacity: 0.9;
+  margin-bottom: 16px;
+}
+
+.landing-info {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+
+.landing-info .info-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.landing-body {
+  padding: 24px;
+}
+
+.landing-announcement {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.landing-announcement .icon-circle {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: var(--accent-light);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.landing-announcement .icon-circle .material-symbols-rounded { color: var(--accent); font-size: 20px; }
+.landing-announcement .text { font-size: 14px; color: var(--text-secondary); line-height: 1.4; }
+.landing-announcement .text strong { color: var(--text-primary); }
+
+.landing-cta { margin-bottom: 12px; }
+
+.landing-link {
+  display: block;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 8px;
+}
+
+.landing-link:hover { color: var(--text-primary); }
+
+.powered-by {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 24px;
+  opacity: 0.9;
+}
+
+/* ==================== SCREEN: MENU CATEGORIES ==================== */
+.category-pills {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.category-pills::-webkit-scrollbar { display: none; }
+
+.pill {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 150ms var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pill.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px 4px;
+}
+
+.section-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.section-header .see-all {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.chef-picks-scroll {
+  display: flex;
+  gap: 12px;
+  padding: 8px 16px 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chef-picks-scroll::-webkit-scrollbar { display: none; }
+
+.chef-pick-card {
+  flex-shrink: 0;
+  width: 160px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform 150ms var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chef-pick-card:active { transform: scale(0.97); }
+
+.chef-pick-card img {
+  width: 100%; height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.chef-pick-card .info {
+  padding: 10px 12px;
+}
+
+.chef-pick-card .info .name {
+  font-size: 14px; font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.chef-pick-card .info .price {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.category-cards {
+  padding: 0 16px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.category-card {
+  position: relative;
+  height: 100px;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.category-card:active { transform: scale(0.98); }
+
+.category-card img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+
+.category-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(0,0,0,0.6) 0%, transparent 70%);
+}
+
+.category-card .label {
+  position: absolute;
+  bottom: 16px; left: 16px;
+  z-index: 1;
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* ==================== SCREEN: MENU ITEMS ==================== */
+.menu-items-list {
+  padding: 4px 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-items-list:last-of-type {
+  padding-bottom: 100px;
+}
+
+.menu-item-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: white;
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: all 150ms var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.menu-item-card:active { background: var(--surface); }
+
+.menu-item-card .item-img {
+  width: 88px; height: 88px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.menu-item-card .item-info { flex: 1; display: flex; flex-direction: column; }
+
+.menu-item-card .item-name {
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+
+.menu-item-card .item-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.3;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.menu-item-card .item-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.menu-item-card .item-price {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.menu-item-card .badges {
+  display: flex; gap: 4px;
+}
+
+/* ==================== BOTTOM SHEET: ITEM DETAIL ==================== */
+.item-detail-img {
+  width: 100%; height: 240px;
+  object-fit: cover;
+  display: block;
+}
+
+.item-detail-body {
+  padding: 20px;
+}
+
+.item-detail-body .name {
+  font-size: 22px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+
+.item-detail-body .desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.item-detail-body .price {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.extras-section {
+  margin-bottom: 20px;
+}
+
+.extras-section h3 {
+  font-size: 16px; font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.extra-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.extra-item label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.extra-item input[type="checkbox"] {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.extra-item .extra-price {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.notes-section {
+  margin-bottom: 20px;
+}
+
+.notes-section h3 {
+  font-size: 16px; font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.notes-section textarea {
+  width: 100%;
+  min-height: 72px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  font-family: var(--font);
+  font-size: 15px;
+  resize: none;
+  outline: none;
+  transition: border-color 200ms;
+}
+
+.notes-section textarea:focus { border-color: var(--primary); }
+
+.notes-section textarea::placeholder { color: #B0B0B0; }
+
+.quantity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  margin-bottom: 12px;
+}
+
+.quantity-stepper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.quantity-stepper button {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: white;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 150ms;
+}
+
+.quantity-stepper button:active { background: var(--surface); }
+
+.quantity-stepper .qty {
+  font-size: 18px;
+  font-weight: 600;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* ==================== SCREEN: CART ==================== */
+.cart-items { padding: 0 16px; }
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.cart-item .item-thumb {
+  width: 56px; height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.cart-item .item-details { flex: 1; }
+.cart-item .item-details .name { font-size: 15px; font-weight: 600; }
+.cart-item .item-details .extras-text { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+.cart-item .item-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.cart-item .item-right .line-total { font-size: 15px; font-weight: 600; }
+
+.cart-qty-stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cart-qty-stepper button {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: white;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.cart-qty-stepper .qty { font-size: 15px; font-weight: 600; min-width: 18px; text-align: center; }
+
+.priority-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.priority-row .label-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.priority-row .label-group .material-symbols-rounded {
+  font-size: 18px;
+  color: var(--accent);
+}
+
+.priority-row .label-text { font-size: 14px; font-weight: 500; }
+.priority-row .label-sub { font-size: 12px; color: var(--text-secondary); }
+
+/* Toggle */
+.toggle {
+  position: relative;
+  width: 48px; height: 28px;
+  border-radius: 14px;
+  background: var(--border);
+  cursor: pointer;
+  transition: background 200ms;
+  border: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.toggle.on { background: var(--accent); }
+
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 24px; height: 24px;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  transition: transform 200ms var(--ease);
+}
+
+.toggle.on::after { transform: translateX(20px); }
+
+.tip-section { padding: 20px 16px; }
+
+.tip-section h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+
+.tip-options {
+  display: flex;
+  gap: 8px;
+}
+
+.tip-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: white;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tip-btn.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+.cart-summary {
+  padding: 16px;
+  border-top: 1px solid var(--border-light);
+}
+
+.cart-summary .row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 15px;
+}
+
+.cart-summary .row.total {
+  font-weight: 700;
+  font-size: 18px;
+  padding-top: 12px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.cart-footer {
+  padding: 12px 16px 32px;
+}
+
+/* ==================== SCREEN: PAYMENT ==================== */
+.payment-methods {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.payment-method {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: white;
+  cursor: pointer;
+  transition: all 150ms;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.payment-method.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.payment-method .radio {
+  width: 22px; height: 22px;
+  border-radius: 999px;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 150ms;
+}
+
+.payment-method.selected .radio {
+  border-color: var(--primary);
+}
+
+.payment-method.selected .radio::after {
+  content: '';
+  width: 12px; height: 12px;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.payment-method .method-info { flex: 1; }
+.payment-method .method-name { font-size: 15px; font-weight: 600; }
+.payment-method .method-desc { font-size: 13px; color: var(--text-secondary); }
+
+.payment-method .method-icon {
+  font-size: 24px;
+  color: var(--text-secondary);
+}
+
+.card-fields {
+  padding: 0 16px 16px;
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-fields.show { display: flex; }
+
+.card-field {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  font-family: var(--font);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 200ms;
+}
+
+.card-field:focus { border-color: var(--primary); }
+
+.card-fields-row {
+  display: flex;
+  gap: 10px;
+}
+
+.card-fields-row .card-field { flex: 1; }
+
+.payment-summary {
+  margin: 0 16px;
+  padding: 16px;
+  background: var(--surface);
+  border-radius: 12px;
+}
+
+.payment-summary .row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.payment-summary .row.total {
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 16px;
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.payment-footer { padding: 16px 16px 32px; }
+
+/* ==================== SCREEN: CONFIRMATION ==================== */
+.confirmation-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px 24px;
+  text-align: center;
+}
+
+.check-circle {
+  width: 80px; height: 80px;
+  border-radius: 999px;
+  background: var(--success);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 24px;
+  animation: scale-in 400ms var(--ease) both;
+}
+
+@keyframes scale-in {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.check-circle .material-symbols-rounded { font-size: 40px; color: white; }
+
+.confirmation-content h1 {
+  font-size: 24px; font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.confirmation-content .order-num {
+  font-size: 15px; color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.confirmation-content .est-time {
+  font-size: 17px; font-weight: 500;
+  margin-bottom: 32px;
+}
+
+.confirmation-content .est-time strong {
+  color: var(--primary);
+}
+
+.confirmation-items {
+  width: 100%;
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.confirmation-items .ci-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 14px;
+}
+
+.confirmation-items .ci-row .qty { color: var(--text-secondary); }
+
+.confirmation-note {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.confirmation-footer { padding: 0 24px 32px; width: 100%; }
+
+/* ==================== SCREEN: ORDER STATUS ==================== */
+.order-status-header {
+  text-align: center;
+  padding: 48px 24px 24px;
+}
+
+.order-status-header .order-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.order-status-header h1 {
+  font-size: 22px; font-weight: 700;
+}
+
+.status-section { padding: 0 24px 24px; }
+
+.status-section h3 {
+  font-size: 16px; font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.item-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 0 24px;
+}
+
+.item-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--surface);
+  border-radius: 10px;
+}
+
+.item-status-row .is-name { font-size: 14px; font-weight: 500; }
+
+.item-status-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.item-status-pill.received { background: #E3F2FD; color: #1565C0; }
+.item-status-pill.preparing { background: #FFF3E0; color: #E65100; }
+.item-status-pill.ready { background: #E8F5E9; color: #2E7D32; }
+
+.status-actions {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+}
+
+/* Search Overlay */
+.search-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  z-index: 300;
+  display: none;
+  flex-direction: column;
+}
+
+.search-overlay.show {
+  display: flex;
+}
+
+.search-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 16px 12px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.search-input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 16px 12px 44px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  font-family: var(--font);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 200ms;
+}
+
+.search-input:focus {
+  border-color: var(--primary);
+}
+
+.search-input-wrapper .material-symbols-rounded {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  font-size: 20px;
+}
+
+.search-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text-primary);
+}
+
+.search-results {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 16px 100px;
+}
+
+.search-empty {
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+</style>
+</head>
+<body>
+
+<div class="device-frame">
+  <div class="screen-container">
+
+    <!-- ==================== LANDING ==================== -->
+    <div class="screen active" id="landing">
+      <div class="landing-hero">
+        <div class="landing-hero-content">
+          <div class="restaurant-name">EL CANTON</div>
+          <div class="tagline">Tapas mediterraneas desde 2018</div>
+          <div class="landing-info">
+            <span class="info-item"><span class="material-symbols-rounded" style="font-size:16px">star</span> 4.7</span>
+            <span class="info-item"><span class="material-symbols-rounded" style="font-size:16px">location_on</span> Murcia</span>
+            <span class="info-item"><span class="material-symbols-rounded" style="font-size:16px">schedule</span> 13:00–23:30</span>
+          </div>
+        </div>
+      </div>
+      <div class="landing-body">
+        <div class="landing-announcement">
+          <div class="icon-circle">
+            <span class="material-symbols-rounded">local_fire_department</span>
+          </div>
+          <div class="text"><strong>Happy Hour activo</strong><br>Bebidas al 50% hasta las 20:00</div>
+        </div>
+        <button class="btn btn-primary landing-cta" onclick="navigateTo('categories')">Pedir ahora</button>
+        <a href="#" class="landing-link" onclick="event.preventDefault(); navigateTo('cart')">Repetir ultimo pedido</a>
+        <div class="powered-by">Powered by <img src="https://1drv.ms/i/c/a1c9420e6c582c0f/IQQakIPQ7M8LQIQGjM5r4BpzAYQq62dU33FMDq6mhVXCMG8?width=1440&height=330" alt="Mzenas" style="height: 16px; vertical-align: middle; margin-left: 4px;"></div>
+      </div>
+    </div>
+
+    <!-- ==================== MENU CATEGORIES ==================== -->
+    <div class="screen" id="categories">
+      <div class="top-bar">
+        <button class="back-btn" onclick="navigateTo('landing')">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <span class="title">El Canton</span>
+        <button class="action-btn" onclick="openSearch()">
+          <span class="material-symbols-rounded">search</span>
+        </button>
+      </div>
+
+      <div class="category-pills">
+        <button class="pill active" onclick="scrollToCategory('all')">Todo</button>
+        <button class="pill" onclick="scrollToCategory('para-picar')">Para picar</button>
+        <button class="pill" onclick="scrollToCategory('ensaladas')">Ensaladas</button>
+        <button class="pill" onclick="scrollToCategory('tapas-calientes')">Tapas calientes</button>
+        <button class="pill" onclick="scrollToCategory('carnes-pescados')">Carnes y pescados</button>
+        <button class="pill" onclick="scrollToCategory('postres')">Postres</button>
+        <button class="pill" onclick="scrollToCategory('bebidas')">Bebidas</button>
+      </div>
+
+      <div class="section-header">
+        <h2>Recomendaciones del chef</h2>
+      </div>
+
+      <div class="chef-picks-scroll">
+        <div class="chef-pick-card" onclick="openItemDetail('croquetas')">
+          <img src="https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400&q=80" alt="Croquetas">
+          <div class="info">
+            <div class="name">Croquetas de jamon</div>
+            <div class="price">8,50 EUR</div>
+          </div>
+        </div>
+        <div class="chef-pick-card" onclick="openItemDetail('pulpo')">
+          <img src="https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&q=80" alt="Pulpo">
+          <div class="info">
+            <div class="name">Pulpo a la gallega</div>
+            <div class="price">14,00 EUR</div>
+          </div>
+        </div>
+        <div class="chef-pick-card" onclick="openItemDetail('ensaladilla')">
+          <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80" alt="Ensaladilla">
+          <div class="info">
+            <div class="name">Ensaladilla rusa</div>
+            <div class="price">7,50 EUR</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header" id="para-picar">
+        <h2>Para picar</h2>
+      </div>
+
+      <div class="menu-items-list">
+        <div class="menu-item-card" onclick="openItemDetail('bravas')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400&q=80" alt="Patatas bravas">
+          <div class="item-info">
+            <div class="item-name">Patatas bravas</div>
+            <div class="item-desc">Patatas crujientes con salsa brava casera y alioli</div>
+            <div class="item-bottom">
+              <span class="item-price">7,50 EUR</span>
+              <div class="badges">
+                <span class="badge badge-popular">Popular</span>
+                <span class="badge badge-gf">GF</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-item-card" onclick="openItemDetail('croquetas')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400&q=80" alt="Croquetas">
+          <div class="item-info">
+            <div class="item-name">Croquetas de jamon</div>
+            <div class="item-desc">Croquetas cremosas de jamon iberico con bechamel casera</div>
+            <div class="item-bottom">
+              <span class="item-price">8,50 EUR</span>
+              <div class="badges">
+                <span class="badge badge-popular">Popular</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-item-card" onclick="openItemDetail('aceitunas')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1593030103066-0093718e7177?w=400&q=80" alt="Aceitunas">
+          <div class="item-info">
+            <div class="item-name">Aceitunas alinadas</div>
+            <div class="item-desc">Aceitunas gordal marinadas con hierbas y citricos</div>
+            <div class="item-bottom">
+              <span class="item-price">4,50 EUR</span>
+              <div class="badges">
+                <span class="badge badge-v">V</span>
+                <span class="badge badge-gf">GF</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-item-card" onclick="openItemDetail('jamon')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1600891964092-4316c288032e?w=400&q=80" alt="Jamon">
+          <div class="item-info">
+            <div class="item-name">Jamon iberico</div>
+            <div class="item-desc">Jamon de bellota cortado a mano con pan con tomate</div>
+            <div class="item-bottom">
+              <span class="item-price">16,00 EUR</span>
+              <div class="badges">
+                <span class="badge badge-gf">GF</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-item-card" onclick="openItemDetail('pan')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1509722747041-616f39b57569?w=400&q=80" alt="Pan con tomate">
+          <div class="item-info">
+            <div class="item-name">Pan con tomate</div>
+            <div class="item-desc">Pan de cristal con tomate rallado y AOVE</div>
+            <div class="item-bottom">
+              <span class="item-price">4,00 EUR</span>
+              <div class="badges">
+                <span class="badge badge-v">V</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header" id="ensaladas">
+        <h2>Ensaladas</h2>
+      </div>
+
+      <div class="menu-items-list">
+        <div class="menu-item-card" onclick="openItemDetail('ensaladilla')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80" alt="Ensaladilla">
+          <div class="item-info">
+            <div class="item-name">Ensaladilla rusa</div>
+            <div class="item-desc">Receta clasica con patata, atun, mayonesa casera y un toque de mostaza</div>
+            <div class="item-bottom">
+              <span class="item-price">7,50 EUR</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-item-card" onclick="openItemDetail('cesar')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1546793665-c74683f339c1?w=400&q=80" alt="Cesar">
+          <div class="item-info">
+            <div class="item-name">Ensalada Cesar</div>
+            <div class="item-desc">Lechuga romana, pollo a la parrilla, parmesano, croutons y salsa cesar</div>
+            <div class="item-bottom">
+              <span class="item-price">9,50 EUR</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header" id="tapas-calientes">
+        <h2>Tapas calientes</h2>
+      </div>
+
+      <div class="menu-items-list">
+        <div class="menu-item-card" onclick="openItemDetail('pulpo')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&q=80" alt="Pulpo">
+          <div class="item-info">
+            <div class="item-name">Pulpo a la gallega</div>
+            <div class="item-desc">Pulpo cocido a baja temperatura con pimenton de la Vera</div>
+            <div class="item-bottom">
+              <span class="item-price">14,00 EUR</span>
+              <div class="badges">
+                <span class="badge badge-popular">Popular</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-item-card" onclick="openItemDetail('gambas')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=400&q=80" alt="Gambas">
+          <div class="item-info">
+            <div class="item-name">Gambas al ajillo</div>
+            <div class="item-desc">Gambas frescas salteadas con ajo, guindilla y perejil</div>
+            <div class="item-bottom">
+              <span class="item-price">12,50 EUR</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header" id="carnes-pescados">
+        <h2>Carnes y pescados</h2>
+      </div>
+
+      <div class="menu-items-list">
+        <div class="menu-item-card" onclick="openItemDetail('solomillo')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1544025162-d76694265947?w=400&q=80" alt="Solomillo">
+          <div class="item-info">
+            <div class="item-name">Solomillo de ternera</div>
+            <div class="item-desc">Solomillo iberico al punto con reduccion de Pedro Ximenez</div>
+            <div class="item-bottom">
+              <span class="item-price">18,00 EUR</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-item-card" onclick="openItemDetail('lubina')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&q=80" alt="Lubina">
+          <div class="item-info">
+            <div class="item-name">Lubina a la sal</div>
+            <div class="item-desc">Lubina fresca al horno en costra de sal con guarnicion</div>
+            <div class="item-bottom">
+              <span class="item-price">16,50 EUR</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header" id="postres">
+        <h2>Postres</h2>
+      </div>
+
+      <div class="menu-items-list">
+        <div class="menu-item-card" onclick="openItemDetail('tarta-queso')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1524351199678-941a58a3df50?w=400&q=80" alt="Tarta">
+          <div class="item-info">
+            <div class="item-name">Tarta de queso</div>
+            <div class="item-desc">Tarta de queso cremosa estilo La Vina con coulis de frutos rojos</div>
+            <div class="item-bottom">
+              <span class="item-price">6,50 EUR</span>
+              <div class="badges">
+                <span class="badge badge-popular">Popular</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-item-card" onclick="openItemDetail('flan')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1587241321921-91a834d82e67?w=400&q=80" alt="Flan">
+          <div class="item-info">
+            <div class="item-name">Flan casero</div>
+            <div class="item-desc">Flan de huevo tradicional con caramelo liquido</div>
+            <div class="item-bottom">
+              <span class="item-price">5,00 EUR</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header" id="bebidas">
+        <h2>Bebidas</h2>
+      </div>
+
+      <div class="menu-items-list" style="padding-top: 0; padding-bottom: 100px">
+        <div class="menu-item-card" onclick="openItemDetail('cerveza')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400&q=80" alt="Cerveza">
+          <div class="item-info">
+            <div class="item-name">Cerveza artesana</div>
+            <div class="item-desc">Cerveza rubia artesanal de barril (330ml)</div>
+            <div class="item-bottom">
+              <span class="item-price">3,50 EUR</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-item-card" onclick="openItemDetail('vino-tinto')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400&q=80" alt="Vino">
+          <div class="item-info">
+            <div class="item-name">Vino tinto</div>
+            <div class="item-desc">Copa de vino tinto D.O. Rioja (150ml)</div>
+            <div class="item-bottom">
+              <span class="item-price">4,00 EUR</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-item-card" onclick="openItemDetail('agua')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&q=80" alt="Agua">
+          <div class="item-info">
+            <div class="item-name">Agua mineral</div>
+            <div class="item-desc">Agua mineral natural o con gas (500ml)</div>
+            <div class="item-bottom">
+              <span class="item-price">2,00 EUR</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MENU ITEMS ==================== -->
+    <div class="screen" id="items">
+      <div class="top-bar">
+        <button class="back-btn" onclick="navigateTo('categories')">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <span class="title">Para picar</span>
+        <button class="action-btn" onclick="openSearch()">
+          <span class="material-symbols-rounded">search</span>
+        </button>
+      </div>
+
+      <div class="menu-items-list">
+        <div class="menu-item-card" onclick="openItemDetail('bravas')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400&q=80" alt="Patatas bravas">
+          <div class="item-info">
+            <div class="item-name">Patatas bravas</div>
+            <div class="item-desc">Patatas crujientes con salsa brava casera y alioli</div>
+            <div class="item-bottom">
+              <span class="item-price">7,50 EUR</span>
+              <div class="badges">
+                <span class="badge badge-popular">Popular</span>
+                <span class="badge badge-gf">GF</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="menu-item-card" onclick="openItemDetail('croquetas')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400&q=80" alt="Croquetas">
+          <div class="item-info">
+            <div class="item-name">Croquetas de jamon</div>
+            <div class="item-desc">Croquetas cremosas de jamon iberico con bechamel casera</div>
+            <div class="item-bottom">
+              <span class="item-price">8,50 EUR</span>
+              <div class="badges">
+                <span class="badge badge-popular">Popular</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="menu-item-card" onclick="openItemDetail('aceitunas')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1593030103066-0093718e7177?w=400&q=80" alt="Aceitunas">
+          <div class="item-info">
+            <div class="item-name">Aceitunas alinadas</div>
+            <div class="item-desc">Aceitunas gordal marinadas con hierbas y citricos</div>
+            <div class="item-bottom">
+              <span class="item-price">4,50 EUR</span>
+              <div class="badges">
+                <span class="badge badge-v">V</span>
+                <span class="badge badge-gf">GF</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="menu-item-card" onclick="openItemDetail('jamon')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1600891964092-4316c288032e?w=400&q=80" alt="Jamon">
+          <div class="item-info">
+            <div class="item-name">Jamon iberico</div>
+            <div class="item-desc">Jamon de bellota cortado a mano con pan con tomate</div>
+            <div class="item-bottom">
+              <span class="item-price">16,00 EUR</span>
+              <div class="badges">
+                <span class="badge badge-gf">GF</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="menu-item-card" onclick="openItemDetail('pan')">
+          <img class="item-img" src="https://images.unsplash.com/photo-1509722747041-616f39b57569?w=400&q=80" alt="Pan con tomate">
+          <div class="item-info">
+            <div class="item-name">Pan con tomate</div>
+            <div class="item-desc">Pan de cristal con tomate rallado y AOVE</div>
+            <div class="item-bottom">
+              <span class="item-price">4,00 EUR</span>
+              <div class="badges">
+                <span class="badge badge-v">V</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== CART ==================== -->
+    <div class="screen" id="cart">
+      <div class="top-bar">
+        <button class="back-btn" onclick="navigateTo('items')">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <span class="title">Tu pedido</span>
+        <span></span>
+      </div>
+
+      <div class="cart-items" id="cartItemsContainer"></div>
+
+      <div style="padding: 0 16px">
+        <div class="priority-row" id="priorityRow1" style="display:none">
+          <div class="label-group">
+            <span class="material-symbols-rounded">bolt</span>
+            <div>
+              <div class="label-text">Dar prioridad</div>
+              <div class="label-sub">Tu pedido se preparara antes</div>
+            </div>
+          </div>
+          <button class="toggle" id="priorityToggle" onclick="this.classList.toggle('on'); updatePriority()"></button>
+        </div>
+      </div>
+
+      <div class="tip-section">
+        <h3>Propina</h3>
+        <div class="tip-options">
+          <button class="tip-btn active" onclick="selectTip(this, 0)">0%</button>
+          <button class="tip-btn" onclick="selectTip(this, 5)">5%</button>
+          <button class="tip-btn" onclick="selectTip(this, 10)">10%</button>
+          <button class="tip-btn" onclick="selectTip(this, 15)">15%</button>
+        </div>
+      </div>
+
+      <div class="cart-summary">
+        <div class="row"><span>Subtotal</span><span id="cartSubtotal">0,00 EUR</span></div>
+        <div class="row"><span>Propina</span><span id="cartTip">0,00 EUR</span></div>
+        <div class="row total"><span>Total</span><span id="cartTotal">0,00 EUR</span></div>
+      </div>
+
+      <div class="cart-footer">
+        <button class="btn btn-primary" id="cartPayBtn" onclick="navigateTo('payment')">Pagar 0,00 EUR</button>
+      </div>
+    </div>
+
+    <!-- ==================== PAYMENT ==================== -->
+    <div class="screen" id="payment">
+      <div class="top-bar">
+        <button class="back-btn" onclick="navigateTo('cart')">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <span class="title">Metodo de pago</span>
+        <span></span>
+      </div>
+
+      <div class="payment-methods">
+        <div class="payment-method selected" onclick="selectPayment(this, 'apple')">
+          <div class="radio"></div>
+          <div class="method-info">
+            <div class="method-name">Apple Pay</div>
+            <div class="method-desc">Pago instantaneo</div>
+          </div>
+          <span class="material-symbols-rounded method-icon">phone_iphone</span>
+        </div>
+        <div class="payment-method" onclick="selectPayment(this, 'google')">
+          <div class="radio"></div>
+          <div class="method-info">
+            <div class="method-name">Google Pay</div>
+            <div class="method-desc">Pago instantaneo</div>
+          </div>
+          <span class="material-symbols-rounded method-icon">smartphone</span>
+        </div>
+        <div class="payment-method" onclick="selectPayment(this, 'card')">
+          <div class="radio"></div>
+          <div class="method-info">
+            <div class="method-name">Tarjeta</div>
+            <div class="method-desc">Debito o credito</div>
+          </div>
+          <span class="material-symbols-rounded method-icon">credit_card</span>
+        </div>
+        <div class="payment-method" onclick="selectPayment(this, 'cash')">
+          <div class="radio"></div>
+          <div class="method-info">
+            <div class="method-name">Efectivo</div>
+            <div class="method-desc">Pagar al camarero</div>
+          </div>
+          <span class="material-symbols-rounded method-icon">payments</span>
+        </div>
+      </div>
+
+      <div class="card-fields" id="cardFields">
+        <input class="card-field" type="text" placeholder="Numero de tarjeta" maxlength="19">
+        <div class="card-fields-row">
+          <input class="card-field" type="text" placeholder="MM/AA" maxlength="5">
+          <input class="card-field" type="text" placeholder="CVV" maxlength="3">
+        </div>
+        <input class="card-field" type="text" placeholder="Nombre del titular">
+      </div>
+
+      <div class="payment-summary">
+        <div class="row"><span>Subtotal</span><span id="paySubtotal">0,00 EUR</span></div>
+        <div class="row"><span>Propina</span><span id="payTip">0,00 EUR</span></div>
+        <div class="row total"><span>Total</span><span id="payTotal">0,00 EUR</span></div>
+      </div>
+
+      <div class="payment-footer">
+        <button class="btn btn-primary" id="confirmPayBtn" onclick="navigateTo('confirmation')">Confirmar pago</button>
+      </div>
+    </div>
+
+    <!-- ==================== CONFIRMATION ==================== -->
+    <div class="screen" id="confirmation">
+      <div class="confirmation-content">
+        <div class="check-circle">
+          <span class="material-symbols-rounded">check</span>
+        </div>
+        <h1>Pedido confirmado!</h1>
+        <div class="order-num">Pedido #042</div>
+        <div class="est-time">Tiempo estimado: <strong>~15 min</strong></div>
+
+        <div class="confirmation-items" id="confirmationItems"></div>
+
+        <div class="confirmation-note">Tu camarero te avisara cuando este listo</div>
+      </div>
+      <div class="confirmation-footer">
+        <button class="btn btn-primary" onclick="navigateTo('status')">Ver estado del pedido</button>
+      </div>
+    </div>
+
+    <!-- ==================== ORDER STATUS ==================== -->
+    <div class="screen" id="status">
+      <div class="order-status-header">
+        <div class="order-label">Pedido</div>
+        <h1>#042 — Mesa 7</h1>
+      </div>
+
+      <div class="status-section">
+        <h3>Estado general</h3>
+        <div class="progress-tracker">
+          <div class="progress-step done" id="step-received">
+            <div class="dot"><span class="material-symbols-rounded">check</span></div>
+            <div class="label">Pedido recibido</div>
+            <div class="sub">13:42</div>
+          </div>
+          <div class="progress-step active" id="step-preparing">
+            <div class="dot"></div>
+            <div class="label">En preparacion</div>
+            <div class="sub">Tiempo estimado: ~12 min</div>
+          </div>
+          <div class="progress-step" id="step-ready">
+            <div class="dot"></div>
+            <div class="label">Listo para servir</div>
+            <div class="sub"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="item-status-list" id="itemStatusList"></div>
+
+      <div class="status-actions">
+        <button class="btn btn-secondary" onclick="navigateTo('categories')">
+          <span class="material-symbols-rounded">restaurant_menu</span>
+          Pedir mas
+        </button>
+        <button class="btn btn-primary" onclick="requestBill()">
+          <span class="material-symbols-rounded">receipt_long</span>
+          Pedir la cuenta
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Search Overlay -->
+  <div class="search-overlay" id="searchOverlay">
+    <div class="search-header">
+      <div class="search-input-wrapper">
+        <span class="material-symbols-rounded">search</span>
+        <input type="text" class="search-input" placeholder="Buscar platos..." id="searchInput" oninput="performSearch()">
+      </div>
+      <button class="search-close-btn" onclick="closeSearch()">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </div>
+    <div class="search-results" id="searchResults">
+      <div class="search-empty">Escribe para buscar platos...</div>
+    </div>
+  </div>
+
+  <!-- Cart FAB -->
+  <button class="cart-fab hidden" id="cartFab" onclick="navigateTo('cart')">
+    <span class="material-symbols-rounded">shopping_bag</span>
+    <span class="count" id="cartFabCount">0</span>
+  </button>
+
+  <!-- Bottom Sheet Overlay -->
+  <div class="bottom-sheet-overlay" id="bsOverlay" onclick="closeItemDetail()"></div>
+
+  <!-- Bottom Sheet: Item Detail -->
+  <div class="bottom-sheet" id="itemDetailSheet">
+    <div class="handle"></div>
+    <div class="bottom-sheet-scroll">
+      <img class="item-detail-img" id="detailImg" src="" alt="">
+      <div class="item-detail-body">
+        <div class="name" id="detailName"></div>
+        <div class="desc" id="detailDesc"></div>
+        <div class="price" id="detailPrice"></div>
+
+        <div class="extras-section">
+          <h3>Extras</h3>
+          <div id="extrasContainer"></div>
+        </div>
+
+        <div class="notes-section">
+          <h3>Notas especiales</h3>
+          <textarea placeholder="Sin cebolla, poco hecho, alergias..." id="detailNotes"></textarea>
+        </div>
+
+        <div class="quantity-row">
+          <span style="font-size:16px;font-weight:600">Cantidad</span>
+          <div class="quantity-stepper">
+            <button onclick="changeDetailQty(-1)">-</button>
+            <span class="qty" id="detailQty">1</span>
+            <button onclick="changeDetailQty(1)">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-sheet-footer">
+      <button class="btn btn-primary" id="addToCartBtn" onclick="addToCart()">Anadir al carrito — 7,50 EUR</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Confetti Container -->
+  <div class="confetti-container" id="confettiContainer"></div>
+</div>
+
+<script>
+const MENU_DATA = {
+  bravas: {
+    name: 'Patatas bravas',
+    desc: 'Patatas crujientes con salsa brava casera y alioli suave. Nuestro plato mas pedido.',
+    price: 7.50,
+    img: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&q=80',
+    extras: [
+      { name: 'Extra de alioli', price: 1.00 },
+      { name: 'Salsa picante', price: 0.50 },
+      { name: 'Huevo frito', price: 1.50 }
+    ]
+  },
+  croquetas: {
+    name: 'Croquetas de jamon',
+    desc: 'Croquetas cremosas de jamon iberico con bechamel casera. Crujientes por fuera, fundentes por dentro.',
+    price: 8.50,
+    img: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=800&q=80',
+    extras: [
+      { name: 'Salsa trufa', price: 2.00 },
+      { name: 'Extra de croquetas (x2)', price: 3.00 }
+    ]
+  },
+  aceitunas: {
+    name: 'Aceitunas alinadas',
+    desc: 'Aceitunas gordal marinadas con hierbas aromaticas, ajo y citricos frescos.',
+    price: 4.50,
+    img: 'https://images.unsplash.com/photo-1593030103066-0093718e7177?w=800&q=80',
+    extras: [
+      { name: 'Pan de cristal', price: 1.50 }
+    ]
+  },
+  jamon: {
+    name: 'Jamon iberico',
+    desc: 'Jamon de bellota iberico cortado a mano, servido con pan con tomate y AOVE.',
+    price: 16.00,
+    img: 'https://images.unsplash.com/photo-1600891964092-4316c288032e?w=800&q=80',
+    extras: [
+      { name: 'Extra pan con tomate', price: 2.00 },
+      { name: 'Picos artesanos', price: 1.50 }
+    ]
+  },
+  pan: {
+    name: 'Pan con tomate',
+    desc: 'Pan de cristal crujiente con tomate rallado y aceite de oliva virgen extra.',
+    price: 4.00,
+    img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?w=800&q=80',
+    extras: [
+      { name: 'Extra AOVE', price: 0.50 },
+      { name: 'Jamon iberico', price: 4.00 }
+    ]
+  },
+  pulpo: {
+    name: 'Pulpo a la gallega',
+    desc: 'Pulpo cocido a baja temperatura con pimenton de la Vera, sal gorda y AOVE.',
+    price: 14.00,
+    img: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80',
+    extras: [
+      { name: 'Cachelos extra', price: 2.50 },
+      { name: 'Pimenton extra', price: 0.50 }
+    ]
+  },
+  ensaladilla: {
+    name: 'Ensaladilla rusa',
+    desc: 'Receta clasica con patata, atun, mayonesa casera y un toque de mostaza.',
+    price: 7.50,
+    img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80',
+    extras: [
+      { name: 'Langostino', price: 3.00 },
+      { name: 'Extra de atun', price: 1.50 }
+    ]
+  },
+  cesar: {
+    name: 'Ensalada Cesar',
+    desc: 'Lechuga romana, pollo a la parrilla, parmesano, croutons y salsa cesar casera.',
+    price: 9.50,
+    img: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=800&q=80',
+    extras: [
+      { name: 'Extra pollo', price: 2.50 },
+      { name: 'Extra parmesano', price: 1.50 }
+    ]
+  },
+  gambas: {
+    name: 'Gambas al ajillo',
+    desc: 'Gambas frescas salteadas con ajo, guindilla y perejil en aceite de oliva.',
+    price: 12.50,
+    img: 'https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=800&q=80',
+    extras: [
+      { name: 'Pan de cristal', price: 1.50 },
+      { name: 'Extra gambas', price: 4.00 }
+    ]
+  },
+  solomillo: {
+    name: 'Solomillo de ternera',
+    desc: 'Solomillo iberico al punto con reduccion de Pedro Ximenez y patatas.',
+    price: 18.00,
+    img: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&q=80',
+    extras: [
+      { name: 'Salsa pimienta', price: 2.00 },
+      { name: 'Salsa roquefort', price: 2.50 }
+    ]
+  },
+  lubina: {
+    name: 'Lubina a la sal',
+    desc: 'Lubina fresca al horno en costra de sal con guarnicion de verduras de temporada.',
+    price: 16.50,
+    img: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800&q=80',
+    extras: [
+      { name: 'Extra AOVE', price: 0.50 }
+    ]
+  },
+  'tarta-queso': {
+    name: 'Tarta de queso',
+    desc: 'Tarta de queso cremosa estilo La Vina con coulis de frutos rojos.',
+    price: 6.50,
+    img: 'https://images.unsplash.com/photo-1524351199678-941a58a3df50?w=800&q=80',
+    extras: [
+      { name: 'Nata montada', price: 1.00 }
+    ]
+  },
+  flan: {
+    name: 'Flan casero',
+    desc: 'Flan de huevo tradicional con caramelo liquido al estilo de la abuela.',
+    price: 5.00,
+    img: 'https://images.unsplash.com/photo-1587241321921-91a834d82e67?w=800&q=80',
+    extras: [
+      { name: 'Nata montada', price: 1.00 }
+    ]
+  },
+  cerveza: {
+    name: 'Cerveza artesana',
+    desc: 'Cerveza rubia artesanal de barril (330ml)',
+    price: 3.50,
+    img: 'https://images.unsplash.com/photo-1608270586620-248524c67de9?w=800&q=80',
+    extras: []
+  },
+  'vino-tinto': {
+    name: 'Vino tinto',
+    desc: 'Copa de vino tinto D.O. Rioja (150ml)',
+    price: 4.00,
+    img: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800&q=80',
+    extras: []
+  },
+  agua: {
+    name: 'Agua mineral',
+    desc: 'Agua mineral natural o con gas (500ml)',
+    price: 2.00,
+    img: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=800&q=80',
+    extras: []
+  }
+};
+
+let cart = [];
+let currentDetailItem = null;
+let currentDetailQty = 1;
+let selectedExtras = [];
+let tipPercent = 0;
+let screenHistory = ['landing'];
+
+function navigateTo(screenId) {
+  const current = document.querySelector('.screen.active');
+  const next = document.getElementById(screenId);
+  if (!current || !next || current === next) return;
+
+  const currentIdx = screenHistory.indexOf(current.id);
+  const isBack = screenHistory.indexOf(screenId) !== -1 && screenHistory.indexOf(screenId) < screenHistory.length - 1;
+
+  if (isBack) {
+    current.style.transform = 'translateX(100%)';
+    current.style.opacity = '0';
+    next.style.transform = 'translateX(-30%)';
+    next.style.opacity = '0.5';
+    next.classList.add('active');
+    requestAnimationFrame(() => {
+      next.style.transform = 'translateX(0)';
+      next.style.opacity = '1';
+    });
+    screenHistory = screenHistory.slice(0, screenHistory.indexOf(screenId) + 1);
+  } else {
+    current.classList.add('exit-left');
+    current.classList.remove('active');
+    next.classList.add('active');
+    screenHistory.push(screenId);
+  }
+
+  setTimeout(() => {
+    document.querySelectorAll('.screen:not(.active)').forEach(s => {
+      s.classList.remove('exit-left');
+      s.style.transform = '';
+      s.style.opacity = '';
+    });
+  }, 350);
+
+  updateCartFab(screenId);
+
+  if (screenId === 'cart') renderCart();
+  if (screenId === 'payment') renderPayment();
+  if (screenId === 'confirmation') { renderConfirmation(); triggerConfetti(); }
+  if (screenId === 'status') renderStatus();
+}
+
+function updateCartFab(screenId) {
+  const fab = document.getElementById('cartFab');
+  const showOn = ['categories', 'items'];
+  if (showOn.includes(screenId) && cart.length > 0) {
+    fab.classList.remove('hidden');
+  } else {
+    fab.classList.add('hidden');
+  }
+  document.getElementById('cartFabCount').textContent = cart.reduce((s, i) => s + i.qty, 0);
+}
+
+function openItemDetail(itemKey) {
+  const item = MENU_DATA[itemKey];
+  if (!item) return;
+
+  currentDetailItem = { ...item, key: itemKey };
+  currentDetailQty = 1;
+  selectedExtras = [];
+
+  document.getElementById('detailImg').src = item.img;
+  document.getElementById('detailName').textContent = item.name;
+  document.getElementById('detailDesc').textContent = item.desc;
+  document.getElementById('detailPrice').textContent = formatPrice(item.price);
+  document.getElementById('detailQty').textContent = '1';
+  document.getElementById('detailNotes').value = '';
+
+  const extrasContainer = document.getElementById('extrasContainer');
+  extrasContainer.innerHTML = item.extras.map((ex, i) => `
+    <div class="extra-item">
+      <label><input type="checkbox" onchange="toggleExtra(${i})" data-idx="${i}"> ${ex.name}</label>
+      <span class="extra-price">+${formatPrice(ex.price)}</span>
+    </div>
+  `).join('');
+
+  updateAddBtnPrice();
+
+  document.getElementById('bsOverlay').classList.add('show');
+  document.getElementById('itemDetailSheet').classList.add('show');
+}
+
+function closeItemDetail() {
+  document.getElementById('bsOverlay').classList.remove('show');
+  document.getElementById('itemDetailSheet').classList.remove('show');
+}
+
+function changeDetailQty(delta) {
+  currentDetailQty = Math.max(1, currentDetailQty + delta);
+  document.getElementById('detailQty').textContent = currentDetailQty;
+  updateAddBtnPrice();
+}
+
+function toggleExtra(idx) {
+  if (selectedExtras.includes(idx)) {
+    selectedExtras = selectedExtras.filter(i => i !== idx);
+  } else {
+    selectedExtras.push(idx);
+  }
+  updateAddBtnPrice();
+}
+
+function updateAddBtnPrice() {
+  if (!currentDetailItem) return;
+  let price = currentDetailItem.price;
+  selectedExtras.forEach(idx => {
+    price += currentDetailItem.extras[idx].price;
+  });
+  price *= currentDetailQty;
+  document.getElementById('addToCartBtn').textContent = `Anadir al carrito — ${formatPrice(price)}`;
+}
+
+function addToCart() {
+  if (!currentDetailItem) return;
+
+  const extrasSelected = selectedExtras.map(idx => currentDetailItem.extras[idx]);
+  const notes = document.getElementById('detailNotes').value;
+  let unitPrice = currentDetailItem.price;
+  extrasSelected.forEach(ex => unitPrice += ex.price);
+
+  const existing = cart.find(ci =>
+    ci.key === currentDetailItem.key &&
+    JSON.stringify(ci.extras) === JSON.stringify(extrasSelected) &&
+    ci.notes === notes
+  );
+
+  if (existing) {
+    existing.qty += currentDetailQty;
+  } else {
+    cart.push({
+      key: currentDetailItem.key,
+      name: currentDetailItem.name,
+      img: currentDetailItem.img,
+      unitPrice: unitPrice,
+      extras: extrasSelected,
+      notes: notes,
+      qty: currentDetailQty,
+      priority: false
+    });
+  }
+
+  closeItemDetail();
+  showToast(`${currentDetailItem.name} anadido al carrito`);
+  updateCartFab(document.querySelector('.screen.active')?.id || '');
+}
+
+function renderCart() {
+  const container = document.getElementById('cartItemsContainer');
+  if (cart.length === 0) {
+    container.innerHTML = '<div style="padding:40px 16px;text-align:center;color:var(--text-secondary)">Tu carrito esta vacio</div>';
+    document.getElementById('priorityRow1').style.display = 'none';
+  } else {
+    document.getElementById('priorityRow1').style.display = 'flex';
+    container.innerHTML = cart.map((item, idx) => `
+      <div class="cart-item">
+        <img class="item-thumb" src="${item.img}" alt="">
+        <div class="item-details">
+          <div class="name">${item.name}</div>
+          ${item.extras.length > 0 ? `<div class="extras-text">${item.extras.map(e => e.name).join(', ')}</div>` : ''}
+          ${item.notes ? `<div class="extras-text" style="font-style:italic">"${item.notes}"</div>` : ''}
+        </div>
+        <div class="item-right">
+          <div class="line-total">${formatPrice(item.unitPrice * item.qty)}</div>
+          <div class="cart-qty-stepper">
+            <button onclick="changeCartQty(${idx}, -1)">-</button>
+            <span class="qty">${item.qty}</span>
+            <button onclick="changeCartQty(${idx}, 1)">+</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+  updateCartTotals();
+}
+
+function changeCartQty(idx, delta) {
+  cart[idx].qty = Math.max(0, cart[idx].qty + delta);
+  if (cart[idx].qty === 0) cart.splice(idx, 1);
+  renderCart();
+  updateCartFab('cart');
+}
+
+function selectTip(btn, pct) {
+  document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  tipPercent = pct;
+  updateCartTotals();
+}
+
+function updatePriority() {}
+
+function updateCartTotals() {
+  const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+  const tip = subtotal * tipPercent / 100;
+  const total = subtotal + tip;
+
+  document.getElementById('cartSubtotal').textContent = formatPrice(subtotal);
+  document.getElementById('cartTip').textContent = formatPrice(tip);
+  document.getElementById('cartTotal').textContent = formatPrice(total);
+  document.getElementById('cartPayBtn').textContent = `Pagar ${formatPrice(total)}`;
+}
+
+function selectPayment(el, method) {
+  document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('cardFields').classList.toggle('show', method === 'card');
+}
+
+function renderPayment() {
+  const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+  const tip = subtotal * tipPercent / 100;
+  const total = subtotal + tip;
+
+  document.getElementById('paySubtotal').textContent = formatPrice(subtotal);
+  document.getElementById('payTip').textContent = formatPrice(tip);
+  document.getElementById('payTotal').textContent = formatPrice(total);
+  document.getElementById('confirmPayBtn').textContent = `Confirmar pago — ${formatPrice(total)}`;
+}
+
+function renderConfirmation() {
+  const container = document.getElementById('confirmationItems');
+  container.innerHTML = cart.map(item => `
+    <div class="ci-row">
+      <span>${item.name}</span>
+      <span class="qty">${item.qty}x ${formatPrice(item.unitPrice * item.qty)}</span>
+    </div>
+  `).join('');
+}
+
+function triggerConfetti() {
+  const container = document.getElementById('confettiContainer');
+  container.innerHTML = '';
+  const colors = ['#E07856', '#4CAF50', '#FFA726', '#42A5F5', '#AB47BC', '#EF5350'];
+  for (let i = 0; i < 50; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = Math.random() * 0.8 + 's';
+    piece.style.animationDuration = (2 + Math.random() * 1.5) + 's';
+    container.appendChild(piece);
+  }
+  setTimeout(() => container.innerHTML = '', 4000);
+}
+
+let statusInterval = null;
+function renderStatus() {
+  const list = document.getElementById('itemStatusList');
+  const statuses = ['received', 'preparing', 'ready'];
+  const labels = { received: 'Recibido', preparing: 'Preparando', ready: 'Listo' };
+
+  list.innerHTML = cart.map((item, idx) => `
+    <div class="item-status-row" data-idx="${idx}">
+      <span class="is-name">${item.qty}x ${item.name}</span>
+      <span class="item-status-pill received" id="status-pill-${idx}">Recibido</span>
+    </div>
+  `).join('');
+
+  document.getElementById('step-received').className = 'progress-step done';
+  document.getElementById('step-preparing').className = 'progress-step active';
+  document.getElementById('step-ready').className = 'progress-step';
+
+  if (statusInterval) clearInterval(statusInterval);
+  let step = 0;
+  statusInterval = setInterval(() => {
+    step++;
+    if (step <= cart.length) {
+      const pill = document.getElementById(`status-pill-${step - 1}`);
+      if (pill) {
+        pill.className = 'item-status-pill preparing';
+        pill.textContent = 'Preparando';
+      }
+    }
+    if (step > 1 && step <= cart.length + 1) {
+      const pill = document.getElementById(`status-pill-${step - 2}`);
+      if (pill) {
+        pill.className = 'item-status-pill ready';
+        pill.textContent = 'Listo';
+      }
+    }
+    if (step > cart.length) {
+      const lastPill = document.getElementById(`status-pill-${cart.length - 1}`);
+      if (lastPill) {
+        lastPill.className = 'item-status-pill ready';
+        lastPill.textContent = 'Listo';
+      }
+      document.getElementById('step-preparing').className = 'progress-step done';
+      document.getElementById('step-preparing').querySelector('.dot').innerHTML = '<span class="material-symbols-rounded">check</span>';
+      document.getElementById('step-ready').className = 'progress-step done';
+      document.getElementById('step-ready').querySelector('.dot').innerHTML = '<span class="material-symbols-rounded">check</span>';
+      document.getElementById('step-ready').querySelector('.sub').textContent = '13:57';
+      clearInterval(statusInterval);
+      showToast('Tu pedido esta listo!');
+    }
+  }, 2000);
+}
+
+function requestBill() {
+  showToast('Cuenta solicitada — tu camarero viene en camino');
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+function formatPrice(n) {
+  return n.toFixed(2).replace('.', ',') + ' EUR';
+}
+
+function scrollToCategory(categoryId) {
+  const pills = document.querySelectorAll('.category-pills .pill');
+  pills.forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const categoriesScreen = document.getElementById('categories');
+
+  if (categoryId === 'all') {
+    smoothScrollTo(categoriesScreen, 0, 400);
+    return;
+  }
+
+  const section = document.getElementById(categoryId);
+  if (section) {
+    const topBarHeight = 120;
+    const sectionTop = section.offsetTop - topBarHeight;
+    smoothScrollTo(categoriesScreen, sectionTop, 400);
+  }
+}
+
+function smoothScrollTo(container, targetTop, duration) {
+  const startTop = container.scrollTop;
+  const distance = targetTop - startTop;
+  const startTime = performance.now();
+
+  function step(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = progress < 0.5
+      ? 4 * progress * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+    container.scrollTop = startTop + distance * ease;
+    if (progress < 1) requestAnimationFrame(step);
+  }
+
+  requestAnimationFrame(step);
+}
+
+function openSearch() {
+  document.getElementById('searchOverlay').classList.add('show');
+  document.getElementById('searchInput').focus();
+}
+
+function closeSearch() {
+  document.getElementById('searchOverlay').classList.remove('show');
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').innerHTML = '<div class="search-empty">Escribe para buscar platos...</div>';
+}
+
+function performSearch() {
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  const resultsContainer = document.getElementById('searchResults');
+
+  if (!query) {
+    resultsContainer.innerHTML = '<div class="search-empty">Escribe para buscar platos...</div>';
+    return;
+  }
+
+  const results = Object.keys(MENU_DATA).filter(key => {
+    const item = MENU_DATA[key];
+    return item.name.toLowerCase().includes(query) ||
+           item.desc.toLowerCase().includes(query);
+  });
+
+  if (results.length === 0) {
+    resultsContainer.innerHTML = '<div class="search-empty">No se encontraron resultados</div>';
+    return;
+  }
+
+  resultsContainer.innerHTML = '<div style="display:flex;flex-direction:column;gap:12px">' +
+    results.map(key => {
+      const item = MENU_DATA[key];
+      return `
+        <div class="menu-item-card" onclick="closeSearch(); openItemDetail('${key}')">
+          <img class="item-img" src="${item.img}" alt="${item.name}">
+          <div class="item-info">
+            <div class="item-name">${item.name}</div>
+            <div class="item-desc">${item.desc}</div>
+            <div class="item-bottom">
+              <span class="item-price">${formatPrice(item.price)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('') +
+  '</div>';
+}
+</script>
+</body>
+</html>
