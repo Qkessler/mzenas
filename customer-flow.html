@@ -94,6 +94,19 @@ html, body {
   z-index: 1000;
 }
 
+@media (max-width: 500px) {
+  html, body { background: var(--bg); }
+  .device-frame {
+    position: fixed;
+    top: 0; left: 0;
+    transform: none;
+    width: 100%; height: 100%;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .device-frame::before { display: none; }
+}
+
 .screen-container {
   flex: 1;
   position: relative;
