@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mzenas — El sistema operativo para la restauración urbana</title>
+<meta name="description" content="Mzenas conecta restaurantes y clientes en una sola plataforma: desde el escaneo del QR hasta el pago. Próximamente.">
+<link rel="icon" type="image/png" href="assets/Mzenas-logo-transparent.png">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mzenas.com/">
+<meta property="og:title" content="Mzenas — El sistema operativo para la restauración urbana">
+<meta property="og:description" content="Mzenas conecta restaurantes y clientes en una sola plataforma: desde el escaneo del QR hasta el pago. Próximamente.">
+<meta property="og:image" content="https://mzenas.com/assets/Mzenas-horizontal.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: #1A1A1A;
+  --accent: #E07856;
+  --text: #1A1A1A;
+  --muted: #6B6B6B;
+  --surface: #FFFFFF;
+  --line: #EAEAEA;
+}
+
+html, body { height: 100%; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--text);
+  background: var(--surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+}
+
+.container {
+  max-width: 560px;
+  width: 100%;
+  text-align: center;
+}
+
+.logo {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 32px;
+  display: block;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(224, 120, 86, 0.1);
+  padding: 6px 14px;
+  border-radius: 24px;
+  margin-bottom: 24px;
+}
+
+h1 {
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+
+h1 .accent { color: var(--accent); }
+
+.tagline {
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 24px;
+  line-height: 1.4;
+}
+
+.description {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+.pillars {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 40px;
+  text-align: left;
+}
+
+.pillar {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.pillar-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.pillar-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.pillar-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.contact {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.contact a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px solid var(--line);
+  transition: border-color 200ms;
+}
+
+.contact a:hover { border-color: var(--accent); }
+
+footer {
+  padding: 24px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 560px) {
+  h1 { font-size: 34px; }
+  .tagline { font-size: 17px; }
+  .pillars { grid-template-columns: 1fr; }
+  .logo { width: 80px; height: 80px; }
+}
+</style>
+</head>
+<body>
+
+<main>
+  <div class="container">
+    <img src="assets/Mzenas-logo-transparent.png" alt="Mzenas" class="logo">
+    <span class="badge">Próximamente</span>
+    <h1>El sistema operativo para la <span class="accent">restauración urbana</span></h1>
+    <p class="tagline">Del QR al pago, en una sola plataforma.</p>
+    <p class="description">
+      Mzenas conecta restaurantes independientes con sus clientes a través de una plataforma única que gestiona todo el recorrido: escanear, pedir, cocinar, pagar. Estamos construyéndolo.
+    </p>
+
+    <div class="pillars">
+      <div class="pillar">
+        <div class="pillar-label">Para restaurantes</div>
+        <div class="pillar-title">Plataforma de operaciones</div>
+        <div class="pillar-desc">Pedidos QR, pantalla de cocina, gestión de mesas y pagos integrados.</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-label">Para clientes</div>
+        <div class="pillar-title">Red de descubrimiento</div>
+        <div class="pillar-desc">Recomendaciones con IA y ofertas en tiempo real en tu ciudad.</div>
+      </div>
+    </div>
+
+    <p class="contact">
+      ¿Tienes un restaurante? Escríbenos a <a href="mailto:info@mzenas.com">info@mzenas.com</a>
+    </p>
+  </div>
+</main>
+
+<footer>
+  © <span id="year"></span> Mzenas · Murcia, España
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>
