@@ -3,16 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="icon" type="image/png" href="assets/mzenas-favicon.png">
+<link rel="apple-touch-icon" href="assets/mzenas-app-icon.png">
 <title>Mzenas — El sistema operativo para la restauración urbana</title>
 <meta name="description" content="Mzenas conecta restaurantes y clientes en una sola plataforma: desde el escaneo del QR hasta el pago. Próximamente.">
-<link rel="icon" type="image/png" href="assets/Mzenas-logo-transparent.png">
+<meta name="theme-color" content="#C0392B">
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://mzenas.com/">
 <meta property="og:title" content="Mzenas — El sistema operativo para la restauración urbana">
 <meta property="og:description" content="Mzenas conecta restaurantes y clientes en una sola plataforma: desde el escaneo del QR hasta el pago. Próximamente.">
-<meta property="og:image" content="https://mzenas.com/assets/Mzenas-horizontal.png">
+<meta property="og:image" content="https://mzenas.com/assets/mzenas-logo-principal.png">
 <meta name="twitter:card" content="summary_large_image">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,7 +25,9 @@
 
 :root {
   --primary: #1A1A1A;
-  --accent: #E07856;
+  --accent: #C0392B;        /* Mzenas red — from official branding sheet */
+  --accent-soft: rgba(192, 57, 43, 0.1);
+  --secondary: #7B3F00;     /* Mzenas brown — from official branding sheet */
   --text: #1A1A1A;
   --muted: #6B6B6B;
   --surface: #FFFFFF;
@@ -59,10 +62,17 @@ main {
 }
 
 .logo {
-  width: 96px;
-  height: 96px;
+  width: 180px;
+  height: auto;
   margin: 0 auto 32px;
   display: block;
+}
+
+.footer-mark {
+  height: 20px;
+  width: auto;
+  vertical-align: middle;
+  margin-right: 8px;
 }
 
 .badge {
@@ -72,7 +82,7 @@ main {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
-  background: rgba(224, 120, 86, 0.1);
+  background: var(--accent-soft);
   padding: 6px 14px;
   border-radius: 24px;
   margin-bottom: 24px;
@@ -173,7 +183,7 @@ footer {
 
 <main>
   <div class="container">
-    <img src="assets/Mzenas-logo-transparent.png" alt="Mzenas" class="logo">
+    <img src="assets/mzenas-logo-vertical.png" alt="Mzenas" class="logo">
     <span class="badge">Próximamente</span>
     <h1>El sistema operativo para la <span class="accent">restauración urbana</span></h1>
     <p class="tagline">Del QR al pago, en una sola plataforma.</p>
@@ -201,6 +211,7 @@ footer {
 </main>
 
 <footer>
+  <img src="assets/mzenas-logo-principal.png" alt="" class="footer-mark" aria-hidden="true">
   © <span id="year"></span> Mzenas · Murcia, España
 </footer>
 

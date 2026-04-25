@@ -41,7 +41,7 @@ git push origin main
 
 The git remote uses HTTPS (`https://github.com/Qkessler/mzenas.git`) with `gh auth` wired in as the credential helper. This sidesteps the original SSH push failure we hit during setup, where the local SSH key was not registered on GitHub. If you later add the SSH key to GitHub and prefer SSH, switch the remote back with `git remote set-url origin git@github.com:Qkessler/mzenas.git`.
 
-The landing page itself lives at `/index.html`. It uses the Mzenas design system (Inter font, `#E07856` terracotta accent, 12px card radius), pulls the logo from `assets/Mzenas-logo-transparent.png`, and includes Open Graph and Twitter Card tags for link previews. Contact email is `info@mzenas.com`, which requires Namecheap's free email forwarding to be configured on the Domain tab so messages actually route to a real inbox.
+The landing page itself lives at `/index.html`. It uses the Mzenas design system (Inter font, `#C0392B` brand red accent with `#7B3F00` brown as the secondary color, 12px card radius), pulls the hero logo from `assets/mzenas-logo-vertical.png` and the share image from `assets/mzenas-logo-principal.png`, and includes Open Graph and Twitter Card tags for link previews. See `assets/README.md` for the full asset inventory. Contact email is `info@mzenas.com`, which requires Namecheap's free email forwarding to be configured on the Domain tab so messages actually route to a real inbox.
 
 ## Why GitHub Pages and not a VPS
 

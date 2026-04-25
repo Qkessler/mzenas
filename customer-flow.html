@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="icon" type="image/png" href="assets/mzenas-favicon.png">
+<link rel="apple-touch-icon" href="assets/mzenas-app-icon.png">
+<meta name="theme-color" content="#C0392B">
 <title>Mzenas — El Canton</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,7 +43,7 @@
   --primary: #1A1A1A;
   --primary-dark: #000000;
   --primary-light: #F5F5F5;
-  --accent: #E07856;
+  --accent: #C0392B;
   --accent-light: #F5D0C3;
   --bg: #FFFFFF;
   --surface: #F8F6F3;
@@ -2336,7 +2338,7 @@ function renderConfirmation() {
 function triggerConfetti() {
   const container = document.getElementById('confettiContainer');
   container.innerHTML = '';
-  const colors = ['#E07856', '#4CAF50', '#FFA726', '#42A5F5', '#AB47BC', '#EF5350'];
+  const colors = ['#C0392B', '#4CAF50', '#FFA726', '#42A5F5', '#AB47BC', '#EF5350'];
   for (let i = 0; i < 50; i++) {
     const piece = document.createElement('div');
     piece.className = 'confetti-piece';

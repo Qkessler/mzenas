@@ -81,7 +81,7 @@ All prototypes use **El Canton**, a fictional Mediterranean tapas bar in Murcia.
 
 ## Design System
 
-- **Aesthetic:** Honest Greens-inspired minimalism. Black primary color, clean white surfaces, food photography as the hero. Terracotta (#E07856) reserved for warm accents (priority badges, active states).
+- **Aesthetic:** Honest Greens-inspired minimalism. Black primary color, clean white surfaces, food photography as the hero. Mzenas red (#C0392B) reserved for warm accents (priority badges, active states); brown (#7B3F00) as the secondary brand color.
 - **Typography:** Inter font family. 8 weights from Display (28px Bold) to Caption (13px Regular).
 - **Spacing:** 8px base unit. Border radius: 12px cards, 8px buttons, 24px pills.
 - **Transitions:** 300ms cubic-bezier(0.4, 0, 0.2, 1) for all interactions.
@@ -108,5 +108,5 @@ plans/
   demo-script.md            5-7 minute demo script with Spanish dialogue
   figma-mockups-plan.md     Original Figma design system specification
 assets/
-  Mzenas-logo-*.png         Logo files
+  mzenas-logo-*.png         Canonical logo files (see assets/README.md)
 ```

@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="icon" type="image/png" href="assets/mzenas-favicon.png">
+<link rel="apple-touch-icon" href="assets/mzenas-app-icon.png">
+<meta name="theme-color" content="#C0392B">
 <title>Mzenas — Onboarding</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,7 +41,7 @@
 
 :root {
   --primary: #1A1A1A;
-  --accent: #E07856;
+  --accent: #C0392B;
   --accent-light: #F5D0C3;
   --bg: #FFFFFF;
   --surface: #F8F6F3;
@@ -1099,7 +1101,7 @@ function generateQR() {
 function triggerConfetti() {
   const container = document.getElementById('confettiContainer');
   container.innerHTML = '';
-  const colors = ['#E07856', '#4CAF50', '#FFA726', '#42A5F5', '#AB47BC', '#EF5350'];
+  const colors = ['#C0392B', '#4CAF50', '#FFA726', '#42A5F5', '#AB47BC', '#EF5350'];
   for (let i = 0; i < 60; i++) {
     const piece = document.createElement('div');
     piece.className = 'confetti-piece';
