@@ -6,6 +6,10 @@ Do not run `git push` under any circumstances. Staging, committing, branching, a
 
 This applies to every remote and every variant: `git push`, `git push --force`, `git push origin`, pushing tags, pushing from inside scripts, and so on.
 
+## Git: commit messages explain the why
+
+Commit messages must explain why a change is being made, not what the change is. The diff already shows what changed; the commit message exists to capture the business context, the problem being solved, or the reasoning the reader cannot recover from the code alone. Keep the description to roughly one paragraph, and only add more paragraphs when extra context genuinely helps the reader understand the motivation.
+
 # Documentation style
 
 Write documentation the way a journalist writes a news story, not the way a manual lists features. The reader should be able to stop reading at any paragraph and still walk away with the context they need.
