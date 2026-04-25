@@ -28,6 +28,7 @@ These files predate the official branding package and are no longer referenced b
 
 | File | Notes |
 | --- | --- |
-| `favicon.png` | Superseded by `mzenas-favicon.png`. |
 | `Mzenas-logo.png`, `Mzenas-logo-transparent.png`, `Mzenas-logo-trimmed.png`, `Mzenas-horizontal.png`, `Mzenas-story.png` | Earlier logo explorations. Superseded by `mzenas-logo-principal.png` / `mzenas-logo-vertical.png` / `mzenas-icon.png`. |
 | `material-symbols-rounded.woff2` | Not legacy — this is the Google Material Symbols icon font used by the product mockup pages (`customer-flow.html`, `restaurant-operations.html`, `restaurant-kitchen.html`, `ai-onboarding.html`). Keep. |
+
+The previous `favicon.png` (a white-background legacy copy from before the branding migration) was removed on 2026-04-25 as part of consolidating on the single canonical `mzenas-favicon.png`, which already ships with a transparent background.
