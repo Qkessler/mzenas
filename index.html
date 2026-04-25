@@ -57,9 +57,81 @@ main {
 }
 
 .container {
-  max-width: 560px;
+  max-width: 680px;
   width: 100%;
   text-align: center;
+}
+
+.section {
+  text-align: left;
+  margin: 48px 0;
+  padding-top: 40px;
+  border-top: 1px solid var(--line);
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.section h2 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  margin-bottom: 16px;
+}
+
+.section p {
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.section p.muted {
+  color: var(--muted);
+}
+
+.phases {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.phase {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #FAFAFA;
+}
+
+.phase-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--secondary);
+  margin-bottom: 10px;
+}
+
+.phase h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.phase p {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0;
 }
 
 .logo {
@@ -164,6 +236,43 @@ h1 .accent { color: var(--accent); }
 
 .contact a:hover { border-color: var(--accent); }
 
+.cta {
+  display: inline-block;
+  background: var(--accent);
+  color: #FFFFFF;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  padding: 14px 28px;
+  border-radius: 999px;
+  transition: transform 200ms, box-shadow 200ms, background 200ms;
+  box-shadow: 0 4px 14px rgba(192, 57, 43, 0.25);
+}
+
+.cta:hover {
+  background: #A83024;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(192, 57, 43, 0.35);
+}
+
+.cta-sub {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+
+.cta-block {
+  margin: 8px 0 40px;
+}
+
+.section .cta-block {
+  text-align: center;
+  margin-top: 28px;
+  margin-bottom: 0;
+}
+
 footer {
   padding: 24px;
   text-align: center;
@@ -175,7 +284,8 @@ footer {
 @media (max-width: 560px) {
   h1 { font-size: 34px; }
   .tagline { font-size: 17px; }
-  .pillars { grid-template-columns: 1fr; }
+  .pillars, .phases { grid-template-columns: 1fr; }
+  .section h2 { font-size: 22px; }
   .logo { width: 80px; height: 80px; }
 }
 </style>
@@ -189,24 +299,69 @@ footer {
     <h1>El sistema operativo para la <span class="accent">restauración urbana</span></h1>
     <p class="tagline">Del QR al pago, en una sola plataforma.</p>
     <p class="description">
-      Mzenas conecta restaurantes independientes con sus clientes a través de una plataforma única que gestiona todo el recorrido: escanear, pedir, cocinar, pagar. Estamos construyéndolo.
+      Mzenas digitaliza el ciclo completo de servicio de un restaurante, desde que el cliente se sienta hasta que paga. Sin hardware, sin instalación, sin formación: funciona en cualquier navegador y un bar puede estar operativo en menos de cinco minutos.
     </p>
+
+    <div class="cta-block">
+      <a href="https://forms.gle/9842i84RXUTbk3yk9" class="cta" target="_blank" rel="noopener">Únete a la lista de espera</a>
+      <span class="cta-sub">Te avisamos en cuanto abramos plazas en tu ciudad.</span>
+    </div>
 
     <div class="pillars">
       <div class="pillar">
         <div class="pillar-label">Para restaurantes</div>
         <div class="pillar-title">Plataforma de operaciones</div>
-        <div class="pillar-desc">Pedidos QR, pantalla de cocina, gestión de mesas y pagos integrados.</div>
+        <div class="pillar-desc">Carta digital con IA, pedidos por QR, pantalla de cocina, gestión de mesas y pago integrado.</div>
       </div>
       <div class="pillar">
         <div class="pillar-label">Para clientes</div>
         <div class="pillar-title">Red de descubrimiento</div>
-        <div class="pillar-desc">Recomendaciones con IA y ofertas en tiempo real en tu ciudad.</div>
+        <div class="pillar-desc">Recomendaciones personalizadas con IA y ofertas en tiempo real en tu ciudad.</div>
       </div>
     </div>
 
+    <section class="section">
+      <div class="section-label">El problema</div>
+      <h2>Ocho de cada diez bares independientes en España no usan software de gestión.</h2>
+      <p>No es por falta de ganas. Es porque las herramientas que existen se diseñaron para grandes cadenas: hardware obligatorio, instalaciones largas, curvas de aprendizaje imposibles. El operador independiente, que representa el 80% del mercado, se queda fuera.</p>
+      <p class="muted">El resultado es conocido: comandas a mano, errores en los pedidos, mesas que rotan despacio y un ticket medio por debajo de su potencial real. La tecnología para resolverlo existe desde hace años. Nadie la ha hecho lo bastante simple.</p>
+    </section>
+
+    <section class="section">
+      <div class="section-label">Nuestra visión</div>
+      <h2>El sistema operativo sobre el que se construye el futuro del ocio gastronómico.</h2>
+      <p>Mzenas no compite por número de funciones. Compite por simplicidad. Simplicidad en el alta, en el uso diario y en la adopción. El restaurante sube su carta en cualquier formato —PDF, foto, Excel— y la IA extrae platos, precios y categorías automáticamente. El QR se imprime en segundos. El cliente escanea, pide y paga desde su móvil. El camarero deja de tomar notas y vuelve a atender.</p>
+      <p>Sobre esa red de restaurantes, construimos después una capa de descubrimiento para el comensal: un catálogo gastronómico con IA que aprende sus gustos y le recomienda sitios, ofertas y momentos únicos en tiempo real. Lo que otros no tienen —los datos generados dentro del restaurante— es lo que hace que nuestras recomendaciones sean mejores desde el primer día.</p>
+    </section>
+
+    <section class="section">
+      <div class="section-label">Cómo llegamos ahí</div>
+      <h2>Dos fases, una misma plataforma.</h2>
+      <div class="phases">
+        <div class="phase">
+          <div class="phase-tag">Fase 1 · Ahora</div>
+          <h3>Software para restaurantes</h3>
+          <p>SaaS por suscripción mensual que resuelve el ciclo completo de servicio. Alta en menos de cinco minutos, sin hardware, en el dispositivo que el restaurante ya tiene.</p>
+        </div>
+        <div class="phase">
+          <div class="phase-tag">Fase 2 · Próximamente</div>
+          <h3>Red de descubrimiento</h3>
+          <p>Catálogo con IA para comensales y <em>Hot Moments</em>: ofertas en tiempo real que los restaurantes activan en horas valle. El cliente descubre qué está pasando en su ciudad ahora mismo.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-label">Empieza ahora</div>
+      <h2>¿Tienes un restaurante? Queremos hablar contigo.</h2>
+      <p class="muted">Estamos incorporando a los primeros restaurantes piloto. Déjanos tus datos y te contactamos para una demo personalizada.</p>
+      <div class="cta-block">
+        <a href="https://forms.gle/9842i84RXUTbk3yk9" class="cta" target="_blank" rel="noopener">Solicitar acceso anticipado</a>
+      </div>
+    </section>
+
     <p class="contact">
-      ¿Tienes un restaurante? Escríbenos a <a href="mailto:info@mzenas.com">info@mzenas.com</a>
+      ¿Prefieres escribirnos directamente? <a href="mailto:info@mzenas.com">info@mzenas.com</a>
     </p>
   </div>
 </main>
