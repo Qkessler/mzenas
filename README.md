@@ -94,6 +94,8 @@ All prototypes use **El Canton**, a fictional Mediterranean tapas bar in Murcia.
 ## Project Structure
 
 ```
+index.html                  Public WIP landing page served at https://mzenas.com
+CNAME                       GitHub Pages custom domain (mzenas.com)
 customer-flow.html          End-customer mobile ordering experience
 restaurant-kitchen.html     Kitchen Display System (dark theme)
 restaurant-operations.html  Table map, dashboard, menu management, config
