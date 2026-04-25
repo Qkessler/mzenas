@@ -8,7 +8,22 @@
 <link rel="apple-touch-icon" href="assets/mzenas-app-icon.png?v=4">
 <title>Mzenas — El sistema operativo para la restauración urbana</title>
 <meta name="description" content="Mzenas conecta restaurantes y clientes en una sola plataforma: desde el escaneo del QR hasta el pago. Próximamente.">
-<meta name="theme-color" content="#C0392B">
+<meta name="theme-color" content="#C0392B" id="theme-color-meta">
+
+<script>
+  // Apply theme before paint to avoid a flash of the wrong palette.
+  (function () {
+    try {
+      var stored = localStorage.getItem('mzenas-theme');
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = stored || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    } catch (e) {
+      // localStorage may be unavailable (private mode, sandboxed iframe); fall back to light.
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  })();
+</script>
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://mzenas.com/">
@@ -32,7 +47,24 @@
   --text: #1A1A1A;
   --muted: #6B6B6B;
   --surface: #FFFFFF;
+  --surface-alt: #FAFAFA;
   --line: #EAEAEA;
+  --cta-shadow: rgba(192, 57, 43, 0.25);
+  --cta-shadow-hover: rgba(192, 57, 43, 0.35);
+}
+
+:root[data-theme="dark"] {
+  --primary: #F5F5F5;
+  --accent: #E74C3C;        /* lifted red for contrast on dark backgrounds */
+  --accent-soft: rgba(231, 76, 60, 0.18);
+  --secondary: #C08A5C;     /* lifted brown for readability on dark */
+  --text: #F5F5F5;
+  --muted: #A0A0A0;
+  --surface: #121212;
+  --surface-alt: #1E1E1E;
+  --line: #2A2A2A;
+  --cta-shadow: rgba(0, 0, 0, 0.45);
+  --cta-shadow-hover: rgba(0, 0, 0, 0.6);
 }
 
 html, body { height: 100%; }
@@ -46,6 +78,44 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+.section, .pillar, .phase, .contact a, footer {
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease, transform 200ms ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.theme-toggle .icon-dark { display: none; }
+:root[data-theme="dark"] .theme-toggle .icon-light { display: none; }
+:root[data-theme="dark"] .theme-toggle .icon-dark { display: inline; }
+
+@media (max-width: 560px) {
+  .theme-toggle { width: 36px; height: 36px; font-size: 16px; top: 12px; right: 12px; }
 }
 
 main {
@@ -108,7 +178,7 @@ main {
   padding: 22px;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: #FAFAFA;
+  background: var(--surface-alt);
 }
 
 .phase-tag {
@@ -247,13 +317,13 @@ h1 .accent { color: var(--accent); }
   padding: 14px 28px;
   border-radius: 999px;
   transition: transform 200ms, box-shadow 200ms, background 200ms;
-  box-shadow: 0 4px 14px rgba(192, 57, 43, 0.25);
+  box-shadow: 0 4px 14px var(--cta-shadow);
 }
 
 .cta:hover {
   background: #A83024;
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(192, 57, 43, 0.35);
+  box-shadow: 0 6px 18px var(--cta-shadow-hover);
 }
 
 .cta-sub {
@@ -291,6 +361,11 @@ footer {
 </style>
 </head>
 <body>
+
+<button type="button" class="theme-toggle" id="theme-toggle" aria-label="Cambiar tema" aria-pressed="false" title="Cambiar tema">
+  <span class="icon-light" aria-hidden="true">☾</span>
+  <span class="icon-dark" aria-hidden="true">☀</span>
+</button>
 
 <main>
   <div class="container">
@@ -373,6 +448,38 @@ footer {
 
 <script>
   document.getElementById('year').textContent = new Date().getFullYear();
+
+  // Theme toggle: persist explicit user choice, otherwise keep following the system.
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('theme-toggle');
+    var meta = document.getElementById('theme-color-meta');
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+    function sync() {
+      var theme = root.getAttribute('data-theme') || 'light';
+      btn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+      if (meta) meta.setAttribute('content', theme === 'dark' ? '#121212' : '#C0392B');
+    }
+
+    btn.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('mzenas-theme', next); } catch (e) {}
+      sync();
+    });
+
+    // When the user has not set an explicit preference, follow the OS.
+    mq.addEventListener('change', function (e) {
+      var hasOverride = false;
+      try { hasOverride = !!localStorage.getItem('mzenas-theme'); } catch (err) {}
+      if (hasOverride) return;
+      root.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+      sync();
+    });
+
+    sync();
+  })();
 </script>
 
 </body>
