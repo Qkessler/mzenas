@@ -10,6 +10,12 @@ This applies to every remote and every variant: `git push`, `git push --force`, 
 
 Commit messages must explain why a change is being made, not what the change is. The diff already shows what changed; the commit message exists to capture the business context, the problem being solved, or the reasoning the reader cannot recover from the code alone. Keep the description to roughly one paragraph, and only add more paragraphs when extra context genuinely helps the reader understand the motivation.
 
+## Verifying visual changes
+
+When a change affects HTML, CSS, images, or anything else that alters how a landing page renders, run the `render-page` skill on the affected file and inspect **both** the desktop and mobile PNGs it returns before declaring the work done. Checking only one viewport is not enough — a change that looks correct on desktop can still break the mobile layout (and vice versa), so every visual change must be verified on both layouts. The skill spawns headless Firefox via geckodriver, writes two full-page screenshots to a temp directory, and prints their paths so the agent can `read` them back as image attachments. Invoke it as `/skill:render-page <file>` or directly with `./.pi/skills/render-page/target/release/render-page <file>`; see `.pi/skills/render-page/SKILL.md` for setup (the binary needs `cargo build --release` once) and for the Firefox mobile-width quirk.
+
+This rule covers the top-level `*.html` pages (`index.html`, `ai-onboarding.html`, `customer-flow.html`, `restaurant-kitchen.html`, `restaurant-operations.html`), anything under `assets/`, and any file those pages reference. Pure copy edits that clearly cannot change layout — fixing a typo inside an existing paragraph, for instance — can skip the render step at the author's discretion, but when in doubt, render.
+
 # Documentation style
 
 Write documentation the way a journalist writes a news story, not the way a manual lists features. The reader should be able to stop reading at any paragraph and still walk away with the context they need.
