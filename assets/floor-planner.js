@@ -341,9 +341,49 @@ function initFloorPlanner(rootEl, options) {
     const cw = canvasWrapEl.clientWidth  - 24;
     const ch = canvasWrapEl.clientHeight - 24;
     if (cw <= 0 || ch <= 0) return;
-    const z = Math.min(1, cw / FP_LOGICAL_W, ch / FP_LOGICAL_H);
+    // Fit the active plan's content bounding box (plus breathing room) rather
+    // than the full 1600x900 logical canvas. Seeded onboarding layouts only
+    // use a fraction of the canvas, so fitting the whole thing produced a
+    // ~52% zoom that made the tables feel tiny. When the plan is empty we
+    // fall back to fitting the full canvas so the operator still sees the
+    // whole working area.
+    const bbox = contentBBox();
+    const targetW = bbox ? bbox.w : FP_LOGICAL_W;
+    const targetH = bbox ? bbox.h : FP_LOGICAL_H;
+    const z = Math.min(1, cw / targetW, ch / targetH);
     state.zoom = Math.max(FP_MIN_ZOOM, Math.round(z * 100) / 100);
     applyZoom();
+    // Scroll the wrap to the bbox origin so content sitting far from (0,0)
+    // still lands in view after fitting.
+    if (bbox) {
+      canvasWrapEl.scrollLeft = Math.max(0, bbox.x * state.zoom);
+      canvasWrapEl.scrollTop  = Math.max(0, bbox.y * state.zoom);
+    } else {
+      canvasWrapEl.scrollLeft = 0;
+      canvasWrapEl.scrollTop = 0;
+    }
+  }
+
+  // Bounding box around all items on the active plan, padded by two grid
+  // cells on every side so tables near the edge don't kiss the viewport.
+  // Returns null when the plan has no items.
+  function contentBBox() {
+    const plan = currentPlan();
+    if (!plan || !plan.items || plan.items.length === 0) return null;
+    const pad = FP_GRID * 2;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    plan.items.forEach(item => {
+      const { w, h } = fpItemSize(item);
+      if (item.x < minX) minX = item.x;
+      if (item.y < minY) minY = item.y;
+      if (item.x + w > maxX) maxX = item.x + w;
+      if (item.y + h > maxY) maxY = item.y + h;
+    });
+    const x0 = Math.max(0, minX - pad);
+    const y0 = Math.max(0, minY - pad);
+    const x1 = Math.min(FP_LOGICAL_W, maxX + pad);
+    const y1 = Math.min(FP_LOGICAL_H, maxY + pad);
+    return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
   }
 
   function applyZoom() {

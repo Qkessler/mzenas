@@ -227,7 +227,7 @@
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
-.fp-zoom-fit { width: auto; padding: 0 10px; gap: 4px; font-size: 11px; font-weight: 600; }
+.fp-zoombar button.fp-zoom-fit { width: auto; padding: 0 10px; gap: 4px; font-size: 11px; font-weight: 600; }
 .fp-zoom-fit-label { font-size: 11px; }
 
 /* ---------- Items ---------- */
@@ -418,7 +418,7 @@
 @media (max-width: 640px) {
   .floor-plan-content h2 { font-size: 22px; }
   .fp-zoom-fit-label { display: none; }
-  .fp-zoom-fit { width: 30px; padding: 0; }
+  .fp-zoombar button.fp-zoom-fit { width: 30px; padding: 0; }
   .fp-plan-add-label { display: none; }
   .fp-plan-add { padding: 6px; }
 }
