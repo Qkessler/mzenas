@@ -7,8 +7,12 @@
 // State is demo-only; nothing persists across reloads.
 
 const FP_GRID = 40;
-const FP_CANVAS_W = 960;
-const FP_CANVAS_H = 560;
+// Logical canvas coordinate space. The actual rendered size is scaled by `state.zoom`
+// so the entire room fits on tablet/desktop viewports without horizontal scrolling.
+const FP_LOGICAL_W = 1600;
+const FP_LOGICAL_H = 900;
+const FP_MIN_ZOOM = 0.3;
+const FP_MAX_ZOOM = 1.5;
 
 const FP_CATALOG = {
   'rect-2':  { kind: 'seat', shape: 'rect',   seats: 2, w: 80,  h: 80,  rotatable: true,  label: '2 plazas',     group: 'rect' },
@@ -46,22 +50,70 @@ function fpSnap(v) { return Math.round(v / FP_GRID) * FP_GRID; }
 function fpClamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
 function fpNewId() { return 'fp' + Math.random().toString(36).slice(2, 8); }
+function fpNewPlanId() { return 'plan' + Math.random().toString(36).slice(2, 7); }
 
 function initFloorPlanner(rootEl, options) {
   options = options || {};
+
+  // Normalize the seed into a { plans, activePlanId } shape. Accepts either:
+  //   - legacy flat array of items → single "Salón principal" plan
+  //   - { plans: [{ id?, name, items, nextNum? }], activePlanId? }
   const state = {
-    items: [],
+    plans: [],
+    activePlanId: null,
     selectedId: null,
-    nextNum: 1,
+    zoom: 1,
+    // If the consumer pinned an activePlanId we honor it on mount; a manual tab
+    // click after that clears this so subsequent renders don't fight the user.
+    _pinnedActive: options.activePlanId || null,
   };
 
-  // Seed from options.seed, computing nextNum from the highest existing num
-  if (Array.isArray(options.seed)) {
-    options.seed.forEach(raw => {
-      const item = normalizeSeed(raw);
-      state.items.push(item);
-      if (item.num && item.num >= state.nextNum) state.nextNum = item.num + 1;
-    });
+  seedPlans(options.seed);
+  if (state.plans.length === 0) addPlan('Salón principal', true);
+  state.activePlanId = options.activePlanId || state.plans[0].id;
+
+  function seedPlans(seed) {
+    if (!seed) return;
+    if (Array.isArray(seed)) {
+      const p = makePlan('Salón principal');
+      seed.forEach(raw => {
+        const it = normalizeSeed(raw);
+        p.items.push(it);
+        if (it.num && it.num >= p.nextNum) p.nextNum = it.num + 1;
+      });
+      state.plans.push(p);
+      return;
+    }
+    if (seed && Array.isArray(seed.plans)) {
+      seed.plans.forEach(rp => {
+        const p = makePlan(rp.name || 'Plano', rp.id);
+        (rp.items || []).forEach(raw => {
+          const it = normalizeSeed(raw);
+          p.items.push(it);
+          if (it.num && it.num >= p.nextNum) p.nextNum = it.num + 1;
+        });
+        if (rp.nextNum && rp.nextNum > p.nextNum) p.nextNum = rp.nextNum;
+        state.plans.push(p);
+      });
+    }
+  }
+
+  function makePlan(name, id) {
+    return { id: id || fpNewPlanId(), name, items: [], nextNum: 1 };
+  }
+
+  function addPlan(name, skipSelect) {
+    const p = makePlan(name || `Plano ${state.plans.length + 1}`);
+    state.plans.push(p);
+    if (!skipSelect) {
+      state.activePlanId = p.id;
+      state.selectedId = null;
+    }
+    return p;
+  }
+
+  function currentPlan() {
+    return state.plans.find(p => p.id === state.activePlanId) || state.plans[0];
   }
 
   function normalizeSeed(raw) {
@@ -98,10 +150,19 @@ function initFloorPlanner(rootEl, options) {
       <div class="fp-pane-header">Catálogo</div>
       <div class="fp-palette" id="fpPalette"></div>
     </div>
-    <div class="fp-pane">
-      <div class="fp-pane-header">Planta de la sala</div>
-      <div class="fp-canvas-wrap">
-        <div class="fp-canvas" id="fpCanvas" style="width:${FP_CANVAS_W}px;height:${FP_CANVAS_H}px"></div>
+    <div class="fp-pane fp-canvas-pane">
+      <div class="fp-plans-bar" id="fpPlansBar"></div>
+      <div class="fp-canvas-wrap" id="fpCanvasWrap">
+        <div class="fp-canvas" id="fpCanvas"
+             style="width:${FP_LOGICAL_W}px;height:${FP_LOGICAL_H}px"></div>
+      </div>
+      <div class="fp-zoombar" id="fpZoomBar">
+        <button type="button" data-z="out" title="Alejar"><span class="material-symbols-rounded">remove</span></button>
+        <span class="fp-zoom-readout" id="fpZoomReadout">100%</span>
+        <button type="button" data-z="in" title="Acercar"><span class="material-symbols-rounded">add</span></button>
+        <button type="button" data-z="fit" class="fp-zoom-fit" title="Ajustar a la ventana">
+          <span class="material-symbols-rounded">fit_screen</span><span class="fp-zoom-fit-label">Ajustar</span>
+        </button>
       </div>
     </div>
     <div class="fp-pane fp-inspector-pane">
@@ -111,12 +172,27 @@ function initFloorPlanner(rootEl, options) {
   `;
 
   const paletteEl = rootEl.querySelector('#fpPalette');
+  const plansBarEl = rootEl.querySelector('#fpPlansBar');
+  const canvasWrapEl = rootEl.querySelector('#fpCanvasWrap');
   const canvasEl = rootEl.querySelector('#fpCanvas');
+  const zoomBarEl = rootEl.querySelector('#fpZoomBar');
+  const zoomReadoutEl = rootEl.querySelector('#fpZoomReadout');
   const inspectorEl = rootEl.querySelector('#fpInspector');
 
   renderPalette();
+  renderPlansBar();
   renderCanvas();
   renderInspector();
+  wireZoomBar();
+
+  // Fit-to-container on mount and whenever the wrap resizes (window resize,
+  // panes collapsing on tablet, DevTools open, etc.). We only auto-fit while
+  // the user hasn't manually zoomed since the last fit.
+  let userZoomed = false;
+  const ro = new ResizeObserver(() => { if (!userZoomed) fitToContainer(); });
+  ro.observe(canvasWrapEl);
+  // Initial fit after layout settles.
+  requestAnimationFrame(() => fitToContainer());
 
   // ===== Palette =====
   function renderPalette() {
@@ -157,7 +233,134 @@ function initFloorPlanner(rootEl, options) {
     return `<div class="fp-item shape-${c.shape}" style="${style};position:static;"></div>`;
   }
 
+  // ===== Plans tab strip =====
+  function renderPlansBar() {
+    const tabs = state.plans.map(p => {
+      const active = p.id === state.activePlanId ? ' active' : '';
+      const canDelete = state.plans.length > 1;
+      return `
+        <div class="fp-plan-tab${active}" data-plan="${p.id}" role="tab" tabindex="0">
+          <span class="fp-plan-name">${escapeHtml(p.name)}</span>
+          <button class="fp-plan-rename" data-act="rename" title="Renombrar"><span class="material-symbols-rounded">edit</span></button>
+          <button class="fp-plan-close" data-act="delete" title="Eliminar plano" ${canDelete ? '' : 'disabled'}>×</button>
+        </div>
+      `;
+    }).join('');
+    plansBarEl.innerHTML = `
+      <div class="fp-plans-tabs" role="tablist">${tabs}
+        <button class="fp-plan-add" id="fpPlanAdd" title="Añadir plano">
+          <span class="material-symbols-rounded">add</span>
+          <span class="fp-plan-add-label">Nuevo plano</span>
+        </button>
+      </div>
+    `;
+    plansBarEl.querySelectorAll('.fp-plan-tab').forEach(el => {
+      const planId = el.dataset.plan;
+      el.addEventListener('click', e => {
+        const act = e.target.closest('[data-act]')?.dataset.act;
+        if (act === 'delete') { e.stopPropagation(); deletePlan(planId); return; }
+        if (act === 'rename') { e.stopPropagation(); renamePlan(planId); return; }
+        activatePlan(planId);
+      });
+      el.addEventListener('dblclick', e => {
+        if (e.target.closest('[data-act]')) return;
+        renamePlan(planId);
+      });
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activatePlan(planId); }
+        if (e.key === 'F2') { e.preventDefault(); renamePlan(planId); }
+      });
+    });
+    plansBarEl.querySelector('#fpPlanAdd').addEventListener('click', () => {
+      const name = (prompt('Nombre del nuevo plano', `Plano ${state.plans.length + 1}`) || '').trim();
+      if (!name) return;
+      addPlan(name);
+      renderPlansBar();
+      renderCanvas();
+      renderInspector();
+      notifyChange();
+    });
+  }
+
+  function activatePlan(planId) {
+    if (state.activePlanId === planId) return;
+    state.activePlanId = planId;
+    state.selectedId = null;
+    renderPlansBar();
+    renderCanvas();
+    renderInspector();
+    notifyChange();
+  }
+
+  function renamePlan(planId) {
+    const p = state.plans.find(x => x.id === planId);
+    if (!p) return;
+    const name = (prompt('Nombre del plano', p.name) || '').trim();
+    if (!name || name === p.name) return;
+    p.name = name;
+    renderPlansBar();
+    notifyChange();
+  }
+
+  function deletePlan(planId) {
+    if (state.plans.length <= 1) return;
+    const p = state.plans.find(x => x.id === planId);
+    if (!p) return;
+    const hasContent = p.items.length > 0;
+    if (hasContent && !confirm(`¿Eliminar el plano "${p.name}"? Se perderán ${p.items.length} elemento(s).`)) return;
+    state.plans = state.plans.filter(x => x.id !== planId);
+    if (state.activePlanId === planId) {
+      state.activePlanId = state.plans[0].id;
+      state.selectedId = null;
+    }
+    renderPlansBar();
+    renderCanvas();
+    renderInspector();
+    notifyChange();
+  }
+
+  // ===== Zoom =====
+  function wireZoomBar() {
+    zoomBarEl.addEventListener('click', e => {
+      const btn = e.target.closest('[data-z]');
+      if (!btn) return;
+      const z = btn.dataset.z;
+      if (z === 'in')  { userZoomed = true; setZoom(state.zoom + 0.1); }
+      if (z === 'out') { userZoomed = true; setZoom(state.zoom - 0.1); }
+      if (z === 'fit') { userZoomed = false; fitToContainer(); }
+    });
+  }
+
+  function setZoom(z) {
+    state.zoom = Math.round(fpClamp(z, FP_MIN_ZOOM, FP_MAX_ZOOM) * 100) / 100;
+    applyZoom();
+  }
+
+  function fitToContainer() {
+    // Account for wrap padding; clientWidth/Height excludes scrollbars.
+    const cw = canvasWrapEl.clientWidth  - 24;
+    const ch = canvasWrapEl.clientHeight - 24;
+    if (cw <= 0 || ch <= 0) return;
+    const z = Math.min(1, cw / FP_LOGICAL_W, ch / FP_LOGICAL_H);
+    state.zoom = Math.max(FP_MIN_ZOOM, Math.round(z * 100) / 100);
+    applyZoom();
+  }
+
+  function applyZoom() {
+    canvasEl.style.transform = `scale(${state.zoom})`;
+    zoomReadoutEl.textContent = Math.round(state.zoom * 100) + '%';
+  }
+
   // ===== Canvas drag-from-palette =====
+  // Translate a clientX/Y event into logical (unscaled) canvas coordinates.
+  function eventToLogical(e) {
+    const rect = canvasEl.getBoundingClientRect();
+    return {
+      x: (e.clientX - rect.left) / state.zoom,
+      y: (e.clientY - rect.top)  / state.zoom,
+    };
+  }
+
   canvasEl.addEventListener('dragover', e => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
@@ -170,22 +373,21 @@ function initFloorPlanner(rootEl, options) {
     const key = e.dataTransfer.getData('text/plain');
     const c = FP_CATALOG[key];
     if (!c) return;
-    const rect = canvasEl.getBoundingClientRect();
-    const dx = e.clientX - rect.left - c.w / 2;
-    const dy = e.clientY - rect.top - c.h / 2;
-    const x = fpClamp(fpSnap(dx), 0, FP_CANVAS_W - c.w);
-    const y = fpClamp(fpSnap(dy), 0, FP_CANVAS_H - c.h);
+    const plan = currentPlan();
+    const { x: lx, y: ly } = eventToLogical(e);
+    const x = fpClamp(fpSnap(lx - c.w / 2), 0, FP_LOGICAL_W - c.w);
+    const y = fpClamp(fpSnap(ly - c.h / 2), 0, FP_LOGICAL_H - c.h);
     const item = {
       id: fpNewId(),
       catalogKey: key,
       kind: c.kind,
       shape: c.shape,
       seats: c.seats,
-      num: c.kind === 'seat' ? state.nextNum++ : null,
+      num: c.kind === 'seat' ? plan.nextNum++ : null,
       x, y, rotation: 0,
       w: c.w, h: c.h,
     };
-    state.items.push(item);
+    plan.items.push(item);
     state.selectedId = item.id;
     renderCanvas();
     renderInspector();
@@ -202,10 +404,11 @@ function initFloorPlanner(rootEl, options) {
 
   // ===== Canvas render =====
   function renderCanvas() {
-    const hint = state.items.length === 0
+    const plan = currentPlan();
+    const hint = plan.items.length === 0
       ? '<div class="fp-canvas-hint">Arrastra una mesa aquí para empezar</div>'
       : '';
-    canvasEl.innerHTML = hint + state.items.map(itemHtml).join('');
+    canvasEl.innerHTML = hint + plan.items.map(itemHtml).join('');
     canvasEl.querySelectorAll('.fp-item').forEach(attachItemHandlers);
   }
 
@@ -263,7 +466,7 @@ function initFloorPlanner(rootEl, options) {
 
     el.addEventListener('pointerdown', e => {
       if (e.target.closest('[data-role="toolbar"]')) return;
-      const item = state.items.find(i => i.id === id);
+      const item = currentPlan().items.find(i => i.id === id);
       if (!item) return;
       dragging = true;
       moved = false;
@@ -279,29 +482,31 @@ function initFloorPlanner(rootEl, options) {
 
     el.addEventListener('pointermove', e => {
       if (!dragging) return;
-      const item = state.items.find(i => i.id === id);
+      const item = currentPlan().items.find(i => i.id === id);
       if (!item) return;
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
+      // Pointer deltas are in rendered (scaled) pixels — divide by zoom to work
+      // in the canvas's logical coordinate space.
+      const dx = (e.clientX - startX) / state.zoom;
+      const dy = (e.clientY - startY) / state.zoom;
       if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
       const { w, h } = fpItemSize(item);
-      const nx = fpClamp(origX + dx, 0, FP_CANVAS_W - w);
-      const ny = fpClamp(origY + dy, 0, FP_CANVAS_H - h);
+      const nx = fpClamp(origX + dx, 0, FP_LOGICAL_W - w);
+      const ny = fpClamp(origY + dy, 0, FP_LOGICAL_H - h);
       el.style.left = nx + 'px';
       el.style.top = ny + 'px';
     });
 
-    el.addEventListener('pointerup', e => {
+    el.addEventListener('pointerup', () => {
       if (!dragging) return;
       dragging = false;
       el.releasePointerCapture(pointerId);
       el.classList.remove('dragging');
-      const item = state.items.find(i => i.id === id);
+      const item = currentPlan().items.find(i => i.id === id);
       if (!item) return;
       if (moved) {
         const { w, h } = fpItemSize(item);
-        item.x = fpClamp(fpSnap(parseFloat(el.style.left)), 0, FP_CANVAS_W - w);
-        item.y = fpClamp(fpSnap(parseFloat(el.style.top)),  0, FP_CANVAS_H - h);
+        item.x = fpClamp(fpSnap(parseFloat(el.style.left)), 0, FP_LOGICAL_W - w);
+        item.y = fpClamp(fpSnap(parseFloat(el.style.top)),  0, FP_LOGICAL_H - h);
       }
       state.selectedId = id;
       renderCanvas();
@@ -318,29 +523,30 @@ function initFloorPlanner(rootEl, options) {
   }
 
   function rotateItem(id) {
-    const item = state.items.find(i => i.id === id);
+    const item = currentPlan().items.find(i => i.id === id);
     if (!item) return;
     const base = FP_CATALOG[item.catalogKey] || {};
     if (!base.rotatable) return;
     item.rotation = item.rotation === 90 ? 0 : 90;
     const { w, h } = fpItemSize(item);
-    item.x = fpClamp(item.x, 0, FP_CANVAS_W - w);
-    item.y = fpClamp(item.y, 0, FP_CANVAS_H - h);
+    item.x = fpClamp(item.x, 0, FP_LOGICAL_W - w);
+    item.y = fpClamp(item.y, 0, FP_LOGICAL_H - h);
     renderCanvas();
     renderInspector();
     notifyChange();
   }
 
   function duplicateItem(id) {
-    const src = state.items.find(i => i.id === id);
+    const plan = currentPlan();
+    const src = plan.items.find(i => i.id === id);
     if (!src) return;
     const copy = Object.assign({}, src, {
       id: fpNewId(),
-      x: fpClamp(src.x + FP_GRID, 0, FP_CANVAS_W - fpItemSize(src).w),
-      y: fpClamp(src.y + FP_GRID, 0, FP_CANVAS_H - fpItemSize(src).h),
-      num: src.kind === 'seat' ? state.nextNum++ : null,
+      x: fpClamp(src.x + FP_GRID, 0, FP_LOGICAL_W - fpItemSize(src).w),
+      y: fpClamp(src.y + FP_GRID, 0, FP_LOGICAL_H - fpItemSize(src).h),
+      num: src.kind === 'seat' ? plan.nextNum++ : null,
     });
-    state.items.push(copy);
+    plan.items.push(copy);
     state.selectedId = copy.id;
     renderCanvas();
     renderInspector();
@@ -348,7 +554,8 @@ function initFloorPlanner(rootEl, options) {
   }
 
   function deleteItem(id) {
-    state.items = state.items.filter(i => i.id !== id);
+    const plan = currentPlan();
+    plan.items = plan.items.filter(i => i.id !== id);
     if (state.selectedId === id) state.selectedId = null;
     renderCanvas();
     renderInspector();
@@ -357,17 +564,18 @@ function initFloorPlanner(rootEl, options) {
 
   // ===== Inspector =====
   function renderInspector() {
-    const sel = state.items.find(i => i.id === state.selectedId);
+    const plan = currentPlan();
+    const sel = plan.items.find(i => i.id === state.selectedId);
     if (!sel) {
-      inspectorEl.innerHTML = summaryHtml();
+      inspectorEl.innerHTML = summaryHtml(plan);
       return;
     }
     inspectorEl.innerHTML = selectedHtml(sel);
     wireSelectedHandlers(sel);
   }
 
-  function summaryHtml() {
-    const seats = state.items.filter(i => i.kind === 'seat');
+  function summaryHtml(plan) {
+    const seats = plan.items.filter(i => i.kind === 'seat');
     const totalSeats = seats.reduce((s, i) => s + (i.seats || 0), 0);
     const byCap = {};
     seats.forEach(i => { byCap[i.seats] = (byCap[i.seats] || 0) + 1; });
@@ -375,17 +583,22 @@ function initFloorPlanner(rootEl, options) {
     const rows = caps.map(cap => `
       <div class="fp-summary-row"><span>Mesas de ${cap} ${cap === 1 ? 'plaza' : 'plazas'}</span><strong>${byCap[cap]}</strong></div>
     `).join('');
-    const empty = state.items.length === 0
-      ? '<div class="fp-inspector-meta">Arrastra elementos desde el catálogo para empezar a diseñar tu sala. Haz clic en cualquier mesa para editarla.</div>'
+    const empty = plan.items.length === 0
+      ? '<div class="fp-inspector-meta">Arrastra elementos desde el catálogo para empezar a diseñar este plano. Haz clic en cualquier mesa para editarla.</div>'
       : '<div class="fp-inspector-meta">Haz clic en cualquier elemento del plano para editarlo, rotarlo o eliminarlo.</div>';
+    const planCount = state.plans.length;
+    const otherPlans = planCount > 1
+      ? `<div class="fp-inspector-meta" style="margin-top:8px">${planCount} planos en total · usa las pestañas para cambiar de sala.</div>`
+      : '';
     return `
-      <h4>Resumen de la sala</h4>
+      <h4>${escapeHtml(plan.name)}</h4>
       <div class="fp-summary-card">
         <div class="fp-summary-total">${seats.length} ${seats.length === 1 ? 'mesa' : 'mesas'}</div>
         <div class="fp-summary-sub">${totalSeats} plazas en total</div>
         ${rows}
       </div>
       ${empty}
+      ${otherPlans}
     `;
   }
 
@@ -440,7 +653,6 @@ function initFloorPlanner(rootEl, options) {
       numInput.addEventListener('input', e => {
         const v = parseInt(e.target.value, 10);
         item.num = isNaN(v) ? null : v;
-        // Re-render canvas only so the number updates; keep inspector intact.
         renderCanvas();
         notifyChange();
       });
@@ -451,8 +663,8 @@ function initFloorPlanner(rootEl, options) {
         const v = parseInt(e.target.value, 10);
         if (item.rotation === 90) item.h = v; else item.w = v;
         const { w, h } = fpItemSize(item);
-        item.x = fpClamp(item.x, 0, FP_CANVAS_W - w);
-        item.y = fpClamp(item.y, 0, FP_CANVAS_H - h);
+        item.x = fpClamp(item.x, 0, FP_LOGICAL_W - w);
+        item.y = fpClamp(item.y, 0, FP_LOGICAL_H - h);
         renderCanvas();
         renderInspector();
         notifyChange();
@@ -475,19 +687,40 @@ function initFloorPlanner(rootEl, options) {
 
   function notifyChange() {
     if (typeof options.onChange === 'function') {
-      options.onChange({ items: state.items.slice() });
+      options.onChange(exportState());
     }
   }
 
+  function exportState() {
+    return {
+      plans: state.plans.map(p => ({
+        id: p.id,
+        name: p.name,
+        nextNum: p.nextNum,
+        items: p.items.slice(),
+      })),
+      activePlanId: state.activePlanId,
+    };
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
   return {
-    getState: () => ({ items: state.items.slice(), nextNum: state.nextNum }),
+    getState: exportState,
     setState: (s) => {
-      state.items = (s.items || []).map(normalizeSeed);
+      state.plans = [];
+      seedPlans(s);
+      if (state.plans.length === 0) addPlan('Salón principal', true);
+      state.activePlanId = (s && s.activePlanId) || state.plans[0].id;
       state.selectedId = null;
-      state.nextNum = Math.max(1, ...state.items.filter(i => i.num).map(i => i.num + 1));
+      renderPlansBar();
       renderCanvas();
       renderInspector();
     },
-    destroy: () => { rootEl.innerHTML = ''; },
+    destroy: () => { ro.disconnect(); rootEl.innerHTML = ''; },
   };
 }

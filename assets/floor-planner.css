@@ -1,16 +1,17 @@
 /* Shared floor-planner component. Consumed by ai-onboarding.html and restaurant-operations.html.
  * Spec: plans/floor-planner-spec.md. Demo only — no persistence. */
 
-/* ==================== STAGE 5: FLOOR PLANNER ==================== */
+/* ==================== FLOOR PLANNER ==================== */
 .floor-plan-content { width: 100%; }
 .floor-plan-content h2 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
 .floor-plan-content .subtitle { color: var(--text-secondary); margin-bottom: 20px; font-size: 15px; }
 
 .fp-root {
   display: grid;
-  grid-template-columns: 220px 1fr 260px;
+  grid-template-columns: 220px minmax(0, 1fr) 260px;
   gap: 12px;
-  height: 600px;
+  height: min(760px, calc(100vh - 220px));
+  min-height: 520px;
   margin-bottom: 20px;
 }
 .fp-pane {
@@ -20,8 +21,10 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
   overflow: hidden;
 }
+.fp-canvas-pane { position: relative; }
 .fp-pane-header {
   padding: 12px 14px;
   border-bottom: 1px solid var(--border);
@@ -77,19 +80,101 @@
   color: var(--text-secondary);
 }
 
+/* ---------- Plans tab strip ---------- */
+.fp-plans-bar {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  overflow: hidden;
+}
+.fp-plans-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.fp-plan-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 6px 6px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: background 0.12s var(--ease), color 0.12s var(--ease);
+}
+.fp-plan-tab:hover { background: var(--surface); color: var(--text-primary); }
+.fp-plan-tab.active {
+  background: var(--surface);
+  color: var(--text-primary);
+  border-color: var(--border);
+  border-bottom-color: var(--surface);
+  margin-bottom: -1px;
+  font-weight: 600;
+}
+.fp-plan-name { pointer-events: none; }
+.fp-plan-tab button {
+  background: transparent;
+  border: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.55;
+}
+.fp-plan-tab button:hover:not(:disabled) { background: rgba(0,0,0,0.08); opacity: 1; }
+.fp-plan-tab button:disabled { opacity: 0.2; cursor: not-allowed; }
+.fp-plan-tab .fp-plan-rename .material-symbols-rounded { font-size: 14px; }
+.fp-plan-tab .fp-plan-close { font-size: 16px; font-weight: 700; line-height: 1; }
+.fp-plan-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fp-plan-add:hover { border-color: var(--accent); color: var(--accent); }
+.fp-plan-add .material-symbols-rounded { font-size: 16px; }
+
+/* ---------- Canvas (fluid + scale transform) ---------- */
 .fp-canvas-wrap {
   flex: 1;
+  min-height: 0;
   overflow: auto;
   position: relative;
   background: #fff;
+  padding: 12px;
 }
 .fp-canvas {
   position: relative;
-  width: 960px;
-  height: 560px;
   background-image: radial-gradient(circle, #d6d2cc 1.2px, transparent 1.2px);
   background-size: 40px 40px;
   background-position: 0 0;
+  transform-origin: top left;
+  will-change: transform;
+  border: 1px solid var(--border-light, #eadfcf);
+  box-sizing: content-box;
 }
 .fp-canvas.dragover { background-color: #faf5f0; }
 .fp-canvas-hint {
@@ -98,12 +183,54 @@
   left: 50%;
   transform: translate(-50%, -50%);
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 18px;
   font-style: italic;
   pointer-events: none;
   text-align: center;
+  white-space: nowrap;
 }
 
+/* ---------- Zoom bar ---------- */
+.fp-zoombar {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  z-index: 5;
+}
+.fp-zoombar button {
+  background: transparent;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+.fp-zoombar button:hover { background: var(--bg); color: var(--accent); }
+.fp-zoombar .material-symbols-rounded { font-size: 18px; }
+.fp-zoom-readout {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  min-width: 38px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.fp-zoom-fit { width: auto; padding: 0 10px; gap: 4px; font-size: 11px; font-weight: 600; }
+.fp-zoom-fit-label { font-size: 11px; }
+
+/* ---------- Items ---------- */
 .fp-item {
   position: absolute;
   box-sizing: border-box;
@@ -193,6 +320,7 @@
 .fp-toolbar button:disabled { opacity: 0.3; cursor: not-allowed; }
 .fp-toolbar .material-symbols-rounded { font-size: 18px; }
 
+/* ---------- Inspector ---------- */
 .fp-inspector { padding: 14px; overflow-y: auto; }
 .fp-inspector h4 { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
 .fp-summary-card {
@@ -271,17 +399,26 @@
 .fp-inspector-actions button.danger:hover { background: #fef3f0; }
 .fp-inspector-actions .material-symbols-rounded { font-size: 16px; }
 
-@media (max-width: 900px) {
+/* ---------- Responsive ---------- */
+/* Tablet portrait: collapse palette and inspector under the canvas. The canvas
+ * remains the star of the show and keeps enough height to work with. */
+@media (max-width: 1024px) {
   .fp-root {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto minmax(420px, 1fr) auto;
     height: auto;
     gap: 10px;
   }
-  .fp-pane.fp-palette-pane { max-height: 160px; }
+  .fp-pane.fp-palette-pane { max-height: 200px; }
   .fp-palette-grid { grid-template-columns: repeat(4, 1fr); }
-  .fp-canvas-wrap { min-height: 420px; max-height: 60vh; }
-  .fp-pane.fp-inspector-pane { max-height: 240px; }
-  .floor-plan-content h2 { font-size: 22px; }
+  .fp-pane.fp-canvas-pane { min-height: 480px; }
+  .fp-pane.fp-inspector-pane { max-height: 260px; }
 }
 
+@media (max-width: 640px) {
+  .floor-plan-content h2 { font-size: 22px; }
+  .fp-zoom-fit-label { display: none; }
+  .fp-zoom-fit { width: 30px; padding: 0; }
+  .fp-plan-add-label { display: none; }
+  .fp-plan-add { padding: 6px; }
+}
