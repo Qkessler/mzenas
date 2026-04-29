@@ -91,6 +91,20 @@ html, body {
   letter-spacing: -0.3px;
 }
 
+.mz-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.mz-mark img { width: 36px; height: 36px; display: block; flex-shrink: 0; }
+.mz-wordmark {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
 .kds-header .restaurant-tag {
   padding: 4px 12px;
   border-radius: 999px;
@@ -521,7 +535,7 @@ html, body {
 <div class="kds-layout">
   <div class="kds-header">
     <div class="left">
-      <img src="/assets/mzenas-logo-principal.png" alt="mzenas" style="height:40px">
+      <span class="mz-mark"><img src="/assets/mzenas-favicon.png" alt="" aria-hidden="true"><span class="mz-wordmark">Mzenas</span></span>
       <span class="restaurant-tag">Tu Restaurante</span>
     </div>
     <div class="center">

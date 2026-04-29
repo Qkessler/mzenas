@@ -501,6 +501,22 @@ html, body {
 
 .landing-link:hover { color: var(--text-primary); }
 
+.mz-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+.mz-mark img { width: 16px; height: 16px; display: block; flex-shrink: 0; }
+.mz-wordmark {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1;
+}
+
 .powered-by {
   text-align: center;
   font-size: 11px;
@@ -1399,7 +1415,7 @@ html, body {
         </div>
         <button class="btn btn-primary landing-cta" onclick="navigateTo('categories')">Pedir ahora</button>
         <a href="#" class="landing-link" onclick="event.preventDefault(); navigateTo('cart')">Repetir ultimo pedido</a>
-        <div class="powered-by">Powered by <img src="/assets/mzenas-logo-principal.png" alt="Mzenas" style="height: 16px; vertical-align: middle; margin-left: 4px;"></div>
+        <div class="powered-by">Powered by <span class="mz-mark"><img src="/assets/mzenas-favicon.png" alt="" aria-hidden="true"><span class="mz-wordmark">Mzenas</span></span></div>
       </div>
     </div>
 

@@ -92,6 +92,20 @@ html, body {
   letter-spacing: -0.3px;
 }
 
+.mz-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.mz-mark img { width: 36px; height: 36px; display: block; flex-shrink: 0; }
+.mz-wordmark {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
 .sidebar-restaurant {
   padding: 0 20px 20px;
   font-size: 13px;
@@ -836,7 +850,7 @@ body:not(.editing-map) .floor-editor { display: none; }
 
 <div class="app-layout">
   <div class="sidebar">
-    <div class="sidebar-logo"><img src="/assets/mzenas-logo-principal.png" alt="mzenas" style="height:45px"></div>
+    <div class="sidebar-logo"><span class="mz-mark"><img src="/assets/mzenas-favicon.png" alt="" aria-hidden="true"><span class="mz-wordmark">Mzenas</span></span></div>
     <div class="sidebar-restaurant">Tu Restaurante</div>
     <nav class="sidebar-nav">
       <button class="nav-item active" onclick="showSection('tablemap', this)">

@@ -83,10 +83,22 @@ html, body {
 .ob-header .logo {
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
 .ob-header .logo img {
-  height: 40px;
+  width: 36px;
+  height: 36px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.ob-header .logo .mz-wordmark {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--text-primary);
 }
 
 .ob-header .step-indicator {
@@ -691,7 +703,7 @@ html, body {
 
 <div class="onboarding-layout">
   <div class="ob-header">
-    <div class="logo"><img src="/assets/mzenas-logo-principal.png" alt="Mzenas"></div>
+    <div class="logo"><img src="/assets/mzenas-favicon.png" alt="" aria-hidden="true"><span class="mz-wordmark">Mzenas</span></div>
     <div class="step-indicator">
       <div class="step-dot active" id="dot-0"></div>
       <div class="step-dot" id="dot-1"></div>
