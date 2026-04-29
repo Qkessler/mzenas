@@ -61,6 +61,13 @@
 }
 .fp-palette-item:hover { border-color: var(--accent); transform: translateY(-1px); }
 .fp-palette-item:active { cursor: grabbing; }
+/* "Armed" state for tap-to-place: the item stays highlighted until the user
+ * taps inside the canvas (or taps the same palette tile again to cancel). */
+.fp-palette-item.pending {
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 2px var(--accent) inset;
+}
 .fp-palette-thumb {
   width: 44px;
   height: 44px;
@@ -177,6 +184,9 @@
   box-sizing: content-box;
 }
 .fp-canvas.dragover { background-color: #faf5f0; }
+/* Tap-to-place mode: cue the canvas as a drop target and switch the cursor
+ * to crosshair so the user understands the next tap will drop an element. */
+.fp-canvas.placing { background-color: #faf5f0; cursor: crosshair; }
 .fp-canvas-hint {
   position: absolute;
   top: 50%;

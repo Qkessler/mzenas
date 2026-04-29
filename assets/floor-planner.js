@@ -63,6 +63,12 @@ function initFloorPlanner(rootEl, options) {
     activePlanId: null,
     selectedId: null,
     zoom: 1,
+    // Catalog key the user "armed" by tapping a palette item; the next tap
+    // inside the canvas will place that element. Lets tablets/touch devices
+    // add elements without relying on HTML5 drag-and-drop, which is flaky on
+    // iPadOS/Android browsers where dragstart on the palette item never
+    // fires from a finger gesture.
+    pendingPaletteKey: null,
     // If the consumer pinned an activePlanId we honor it on mount; a manual tab
     // click after that clears this so subsequent renders don't fight the user.
     _pinnedActive: options.activePlanId || null,
@@ -207,8 +213,40 @@ function initFloorPlanner(rootEl, options) {
       el.addEventListener('dragstart', e => {
         e.dataTransfer.setData('text/plain', el.dataset.key);
         e.dataTransfer.effectAllowed = 'copy';
+        // Starting a real drag cancels any armed tap-to-place so the two
+        // interaction modes don't compete.
+        setPendingKey(null);
+      });
+      el.addEventListener('click', () => {
+        const key = el.dataset.key;
+        setPendingKey(state.pendingPaletteKey === key ? null : key);
       });
     });
+    reflectPendingKey();
+  }
+
+  function setPendingKey(key) {
+    state.pendingPaletteKey = key;
+    reflectPendingKey();
+  }
+
+  function reflectPendingKey() {
+    paletteEl.querySelectorAll('.fp-palette-item').forEach(el => {
+      el.classList.toggle('pending', el.dataset.key === state.pendingPaletteKey);
+    });
+    canvasEl.classList.toggle('placing', !!state.pendingPaletteKey);
+    // Refresh the canvas hint copy so empty plans prompt the user for the
+    // right next gesture (drag vs. tap).
+    const hint = canvasEl.querySelector('.fp-canvas-hint');
+    if (hint) hint.textContent = canvasHintText();
+  }
+
+  function canvasHintText() {
+    if (state.pendingPaletteKey) {
+      const c = FP_CATALOG[state.pendingPaletteKey];
+      return `Toca aquí para colocar: ${c ? c.label : 'elemento'}`;
+    }
+    return 'Arrastra una mesa aquí o toca un elemento del catálogo y luego toca aquí para colocarlo';
   }
 
   function paletteItemHtml(key) {
@@ -411,10 +449,16 @@ function initFloorPlanner(rootEl, options) {
     e.preventDefault();
     canvasEl.classList.remove('dragover');
     const key = e.dataTransfer.getData('text/plain');
+    const { x: lx, y: ly } = eventToLogical(e);
+    placeCatalogItem(key, lx, ly);
+  });
+
+  // Place a catalog item centered on logical (lx, ly). Used by both the drop
+  // handler and the tap-to-place flow.
+  function placeCatalogItem(key, lx, ly) {
     const c = FP_CATALOG[key];
     if (!c) return;
     const plan = currentPlan();
-    const { x: lx, y: ly } = eventToLogical(e);
     const x = fpClamp(fpSnap(lx - c.w / 2), 0, FP_LOGICAL_W - c.w);
     const y = fpClamp(fpSnap(ly - c.h / 2), 0, FP_LOGICAL_H - c.h);
     const item = {
@@ -429,13 +473,20 @@ function initFloorPlanner(rootEl, options) {
     };
     plan.items.push(item);
     state.selectedId = item.id;
+    setPendingKey(null);
     renderCanvas();
     renderInspector();
     notifyChange();
-  });
+  }
 
   canvasEl.addEventListener('click', e => {
-    if (e.target === canvasEl || e.target.classList.contains('fp-canvas-hint')) {
+    const isEmptyTarget = e.target === canvasEl || e.target.classList.contains('fp-canvas-hint');
+    if (state.pendingPaletteKey && isEmptyTarget) {
+      const { x: lx, y: ly } = eventToLogical(e);
+      placeCatalogItem(state.pendingPaletteKey, lx, ly);
+      return;
+    }
+    if (isEmptyTarget) {
       state.selectedId = null;
       renderCanvas();
       renderInspector();
@@ -446,10 +497,11 @@ function initFloorPlanner(rootEl, options) {
   function renderCanvas() {
     const plan = currentPlan();
     const hint = plan.items.length === 0
-      ? '<div class="fp-canvas-hint">Arrastra una mesa aquí para empezar</div>'
+      ? `<div class="fp-canvas-hint">${canvasHintText()}</div>`
       : '';
     canvasEl.innerHTML = hint + plan.items.map(itemHtml).join('');
     canvasEl.querySelectorAll('.fp-item').forEach(attachItemHandlers);
+    canvasEl.classList.toggle('placing', !!state.pendingPaletteKey);
   }
 
   function itemHtml(item) {
@@ -624,7 +676,7 @@ function initFloorPlanner(rootEl, options) {
       <div class="fp-summary-row"><span>Mesas de ${cap} ${cap === 1 ? 'plaza' : 'plazas'}</span><strong>${byCap[cap]}</strong></div>
     `).join('');
     const empty = plan.items.length === 0
-      ? '<div class="fp-inspector-meta">Arrastra elementos desde el catálogo para empezar a diseñar este plano. Haz clic en cualquier mesa para editarla.</div>'
+      ? '<div class="fp-inspector-meta">Arrastra elementos desde el catálogo, o toca uno y luego el plano para colocarlo. Toca cualquier mesa para editarla.</div>'
       : '<div class="fp-inspector-meta">Haz clic en cualquier elemento del plano para editarlo, rotarlo o eliminarlo.</div>';
     const planCount = state.plans.length;
     const otherPlans = planCount > 1
@@ -715,6 +767,11 @@ function initFloorPlanner(rootEl, options) {
   // ===== Keyboard =====
   rootEl.tabIndex = 0;
   rootEl.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && state.pendingPaletteKey) {
+      e.preventDefault();
+      setPendingKey(null);
+      return;
+    }
     if (!state.selectedId) return;
     if (e.key === 'Delete' || e.key === 'Backspace') {
       if (e.target.tagName === 'INPUT') return;
