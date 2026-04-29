@@ -918,6 +918,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+  // Dev hook: ?view=N (or legacy ?stage=N) jumps straight to a stage for screenshot/testing.
+  const params = new URLSearchParams(location.search);
+  const stageParam = params.get('view') ?? params.get('stage');
+  if (stageParam !== null) {
+    const n = parseInt(stageParam, 10);
+    if (!isNaN(n) && n >= 0 && n <= 4) {
+      for (let i = 0; i <= n; i++) if (!visitedStages.includes(i)) visitedStages.push(i);
+      goToStage(n);
+    }
+  }
 });
 
 // === UPLOAD ===

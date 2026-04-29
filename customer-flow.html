@@ -413,11 +413,6 @@ html, body {
 .progress-step .sub { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
 
 /* ==================== SCREEN: LANDING ==================== */
-#landing {
-  transform: translateX(0);
-  opacity: 1;
-}
-
 .landing-hero {
   position: relative;
   height: 480px;
@@ -2506,6 +2501,44 @@ function performSearch() {
     }).join('') +
   '</div>';
 }
+function applyInitialView() {
+  const params = new URLSearchParams(window.location.search);
+  const view = params.get('view');
+  if (!view) return;
+  const target = document.getElementById(view);
+  if (!target || !target.classList.contains('screen')) return;
+
+  // Cart-dependent screens need realistic content to screenshot meaningfully.
+  const SAMPLE_CART = [
+    { key: 'bravas', qty: 1 },
+    { key: 'croquetas', qty: 2 },
+    { key: 'pulpo', qty: 1 },
+    { key: 'vino-tinto', qty: 2 },
+  ];
+  const needsCart = ['cart', 'payment', 'confirmation', 'status'];
+  if (needsCart.includes(view) && cart.length === 0) {
+    cart = SAMPLE_CART.map(entry => {
+      const item = MENU_DATA[entry.key];
+      return { key: entry.key, name: item.name, img: item.img, unitPrice: item.price, extras: [], notes: '', qty: entry.qty };
+    });
+  }
+
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active', 'exit-left');
+    s.style.transform = '';
+    s.style.opacity = '';
+  });
+  target.classList.add('active');
+  screenHistory = view === 'landing' ? ['landing'] : ['landing', view];
+
+  if (view === 'cart') renderCart();
+  if (view === 'payment') renderPayment();
+  if (view === 'confirmation') renderConfirmation();
+  if (view === 'status') renderStatus();
+  updateCartFab(view);
+}
+
+applyInitialView();
 </script>
 </body>
 </html>

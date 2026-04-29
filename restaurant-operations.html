@@ -1304,6 +1304,14 @@ document.addEventListener('click', (e) => {
 
 renderFloorPlan();
 renderMenuTable();
+
+// Dev hook: ?view=<section> jumps straight to a section (tablemap|dashboard|menu|config) for screenshots/testing.
+(function applyInitialView() {
+  const view = new URLSearchParams(location.search).get('view');
+  if (!view) return;
+  const btn = document.querySelector(`.nav-item[onclick*="showSection('${view}'"]`);
+  if (btn) showSection(view, btn);
+})();
 </script>
 </body>
 </html>
