@@ -149,7 +149,7 @@ html, body {
   animation: fade-in 400ms var(--ease);
 }
 
-.stage.stage-wide { max-width: 1200px; }
+.stage.stage-wide { max-width: min(1680px, calc(100vw - 48px)); }
 
 .stage.active { display: block; }
 
@@ -835,7 +835,7 @@ html, body {
     <div class="stage stage-wide" id="stage-4">
       <div class="floor-plan-content">
         <h2>Diseña tu sala</h2>
-        <p class="subtitle">Arrastra mesas y elementos desde la izquierda. Haz clic en cualquiera para rotarlo, duplicarlo o cambiar su número. Podrás editarlo más tarde desde el panel.</p>
+        <p class="subtitle">Empieza por el salón principal y añade más planos (terraza, barra, reservados) con la pestaña <strong>Nuevo plano</strong>. Arrastra mesas desde la izquierda y haz clic en cualquiera para rotarla, duplicarla o cambiar su número.</p>
         <div class="fp-root" id="floorPlanner"></div>
         <div class="review-actions">
           <button class="ob-btn ob-btn-secondary" onclick="goToStage(3)">Volver</button>
@@ -1057,25 +1057,31 @@ function mountFloorPlanner() {
   if (onboardingPlanner) return;
   onboardingPlanner = initFloorPlanner(root, {
     mode: 'onboarding',
-    seed: suggestedStarterLayout(),
+    seed: suggestedStarterPlans(),
   });
 }
 
-// Suggested starter layout shown the first time the operator lands on stage 4.
-// Pre-seeding so they see a realistic room and tweak, rather than stare at a blank canvas.
-function suggestedStarterLayout() {
-  return [
-    { kind: 'seat', shape: 'rect', seats: 4, num: 1, x: 120, y: 80,  rotation: 0 },
-    { kind: 'seat', shape: 'rect', seats: 4, num: 2, x: 240, y: 80,  rotation: 0 },
-    { kind: 'seat', shape: 'rect', seats: 4, num: 3, x: 360, y: 80,  rotation: 0 },
-    { kind: 'seat', shape: 'rect', seats: 2, num: 4, x: 480, y: 80,  rotation: 0 },
-    { kind: 'seat', shape: 'rect', seats: 2, num: 5, x: 480, y: 200, rotation: 0 },
-    { kind: 'seat', shape: 'rect', seats: 6, num: 6, x: 120, y: 280, rotation: 0 },
-    { kind: 'seat', shape: 'rect', seats: 6, num: 7, x: 240, y: 280, rotation: 0 },
-    { kind: 'seat', shape: 'round', seats: 4, num: 8, x: 600, y: 80,  rotation: 0 },
-    { kind: 'seat', shape: 'round', seats: 2, num: 9, x: 760, y: 120, rotation: 0 },
-    { kind: 'prop', shape: 'bar',  num: null, x: 40, y: 480, rotation: 0, w: 400, h: 60 },
-  ];
+// Starter layout shown the first time the operator lands on stage 4. We seed two
+// plans so the multi-room concept is obvious at a glance: a small salón with six
+// representative tables, and an empty terraza the operator can fill in. Sizes
+// and spacing target the planner's 1600×900 logical canvas.
+function suggestedStarterPlans() {
+  return {
+    plans: [
+      {
+        name: 'Salón principal',
+        items: [
+          { kind: 'seat', shape: 'rect',  seats: 4, num: 1, x: 200, y: 160, rotation: 0 },
+          { kind: 'seat', shape: 'rect',  seats: 4, num: 2, x: 360, y: 160, rotation: 0 },
+          { kind: 'seat', shape: 'rect',  seats: 2, num: 3, x: 560, y: 160, rotation: 0 },
+          { kind: 'seat', shape: 'rect',  seats: 2, num: 4, x: 560, y: 320, rotation: 0 },
+          { kind: 'seat', shape: 'rect',  seats: 6, num: 5, x: 200, y: 480, rotation: 0 },
+          { kind: 'seat', shape: 'round', seats: 4, num: 6, x: 760, y: 200, rotation: 0 },
+        ],
+      },
+      { name: 'Terraza', items: [] },
+    ],
+  };
 }
 
 // === REVIEW ===
