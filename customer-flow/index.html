@@ -942,6 +942,30 @@ html, body {
 .cart-item .item-details .name { font-size: 15px; font-weight: 600; }
 .cart-item .item-details .extras-text { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
 
+/* Items the kitchen already received: greyed out, struck through, and locked. */
+.cart-item.ordered { opacity: 0.6; }
+.cart-item.ordered .item-thumb { filter: grayscale(1); }
+.cart-item.ordered .name,
+.cart-item.ordered .extras-text,
+.cart-item.ordered .line-total { text-decoration: line-through; }
+.cart-item.ordered .drag-handle,
+.cart-item.ordered .cart-qty-stepper { display: none; }
+.cart-item .ordered-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--success);
+  background: #E8F5E9;
+  padding: 2px 8px;
+  border-radius: 12px;
+  display: inline-block;
+  margin-top: 4px;
+  text-decoration: none !important;
+}
+.cart-footer .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .cart-item .item-right {
   display: flex;
   flex-direction: column;
@@ -1408,7 +1432,62 @@ html, body {
   margin-bottom: 24px;
 }
 
-.confirmation-footer { padding: 0 24px 32px; width: 100%; }
+.paid-screen .confirmation-content {
+  min-height: 100%;
+  justify-content: center;
+  padding: 24px;
+}
+
+.paid-reassure {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  max-width: 320px;
+}
+
+.check-circle.pending {
+  background: var(--warning);
+}
+
+.cash-pending-screen .confirmation-content {
+  min-height: 100%;
+  justify-content: center;
+  padding: 24px;
+}
+
+.cash-pending-amount {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.cash-pending-amount strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.cash-pending-note {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  max-width: 320px;
+}
+
+.cash-pending-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 320px;
+}
+
+.confirmation-footer { padding: 0 24px 32px; width: 100%; display: flex; flex-direction: column; gap: 10px; }
 
 /* ==================== SCREEN: ORDER STATUS ==================== */
 .order-status-header {
@@ -1958,6 +2037,25 @@ html, body {
 
       <div class="cart-items" id="cartItemsContainer"></div>
 
+      <div class="cart-summary">
+        <div class="row total"><span>Total</span><span id="cartTotal">0,00 EUR</span></div>
+      </div>
+
+      <div class="cart-footer">
+        <button class="btn btn-primary" id="cartPayBtn" onclick="navigateTo('sending')">Enviar a cocina — 0,00 EUR</button>
+      </div>
+    </div>
+
+    <!-- ==================== PAYMENT ==================== -->
+    <div class="screen" id="payment">
+      <div class="top-bar">
+        <button class="back-btn" onclick="navigateTo('status')">
+          <span class="material-symbols-rounded">arrow_back</span>
+        </button>
+        <span class="title">Pagar la cuenta</span>
+        <span></span>
+      </div>
+
       <div class="tip-section">
         <h3>Propina</h3>
         <div class="tip-options">
@@ -1966,27 +2064,6 @@ html, body {
           <button class="tip-btn" onclick="selectTip(this, 10)">10%</button>
           <button class="tip-btn" onclick="selectTip(this, 15)">15%</button>
         </div>
-      </div>
-
-      <div class="cart-summary">
-        <div class="row"><span>Subtotal</span><span id="cartSubtotal">0,00 EUR</span></div>
-        <div class="row"><span>Propina</span><span id="cartTip">0,00 EUR</span></div>
-        <div class="row total"><span>Total</span><span id="cartTotal">0,00 EUR</span></div>
-      </div>
-
-      <div class="cart-footer">
-        <button class="btn btn-primary" id="cartPayBtn" onclick="navigateTo('payment')">Pagar 0,00 EUR</button>
-      </div>
-    </div>
-
-    <!-- ==================== PAYMENT ==================== -->
-    <div class="screen" id="payment">
-      <div class="top-bar">
-        <button class="back-btn" onclick="navigateTo('cart')">
-          <span class="material-symbols-rounded">arrow_back</span>
-        </button>
-        <span class="title">Metodo de pago</span>
-        <span></span>
       </div>
 
       <div class="payment-methods">
@@ -2014,7 +2091,7 @@ html, body {
           </div>
           <span class="material-symbols-rounded method-icon">credit_card</span>
         </div>
-        <div class="payment-method" onclick="selectPayment(this, 'cash')">
+        <div class="payment-method" id="payMethodCash" onclick="selectPayment(this, 'cash')">
           <div class="radio"></div>
           <div class="method-info">
             <div class="method-name">Efectivo</div>
@@ -2040,7 +2117,33 @@ html, body {
       </div>
 
       <div class="payment-footer">
-        <button class="btn btn-primary" id="confirmPayBtn" onclick="navigateTo('sending')">Confirmar pago</button>
+        <button class="btn btn-primary" id="confirmPayBtn" onclick="submitPayment()">Confirmar pago</button>
+      </div>
+    </div>
+
+    <!-- ==================== CASH PENDING (waiter notified, payment still owed) ==================== -->
+    <div class="screen paid-screen cash-pending-screen" id="cashPending">
+      <div class="confirmation-content">
+        <div class="check-circle pending">
+          <span class="material-symbols-rounded">receipt_long</span>
+        </div>
+        <h1>Avisando al camarero</h1>
+        <div class="cash-pending-amount">Pendiente de cobrar: <strong id="cashPendingTotal">0,00 EUR</strong></div>
+        <div class="cash-pending-note">Un camarero se acercará a tu mesa para cobrar el pedido en efectivo.</div>
+        <div class="cash-pending-hint">Por favor, espera en la mesa hasta que confirme el pago.</div>
+      </div>
+    </div>
+
+    <!-- ==================== PAID (thank you / terminal screen) ==================== -->
+    <div class="screen paid-screen" id="paid">
+      <div class="confirmation-content">
+        <div class="check-circle">
+          <span class="material-symbols-rounded">check</span>
+        </div>
+        <h1>Pago recibido</h1>
+        <div class="est-time">Total pagado: <strong id="paidTotal">0,00 EUR</strong></div>
+        <div class="paid-reassure">Todo listo. Puedes marcharte cuando quieras, sin pasar por caja.</div>
+        <div class="confirmation-note">Gracias por tu visita. Esperamos verte pronto!</div>
       </div>
     </div>
 
@@ -2084,6 +2187,10 @@ html, body {
       </div>
       <div class="confirmation-footer">
         <button class="btn btn-primary" onclick="navigateTo('status')">Ver estado del pedido</button>
+        <button class="btn btn-secondary" onclick="navigateTo('categories')">
+          <span class="material-symbols-rounded">restaurant_menu</span>
+          Pedir mas
+        </button>
       </div>
     </div>
 
@@ -2122,7 +2229,7 @@ html, body {
           <span class="material-symbols-rounded">restaurant_menu</span>
           Pedir mas
         </button>
-        <button class="btn btn-primary" onclick="requestBill()">
+        <button class="btn btn-primary" onclick="navigateTo('payment')">
           <span class="material-symbols-rounded">receipt_long</span>
           Pedir la cuenta
         </button>
@@ -2384,6 +2491,12 @@ function navigateTo(screenId) {
   }
 
   setTimeout(() => {
+    // After a back-nav the outgoing screen is intentionally left .active during
+    // the slide-out so both screens animate at once. Drop .active now so the
+    // cleanup below also resets its inline transform/opacity; otherwise the
+    // next forward navigation to that screen inherits the offscreen styles and
+    // the user sees a blank screen (e.g. undo-send → send again).
+    if (isBack) current.classList.remove('active');
     document.querySelectorAll('.screen:not(.active)').forEach(s => {
       s.classList.remove('exit-left');
       s.style.transform = '';
@@ -2404,12 +2517,13 @@ function navigateTo(screenId) {
 function updateCartFab(screenId) {
   const fab = document.getElementById('cartFab');
   const showOn = ['categories', 'items'];
-  if (showOn.includes(screenId) && cart.length > 0) {
+  const pendingQty = cart.reduce((s, i) => i.ordered ? s : s + i.qty, 0);
+  if (showOn.includes(screenId) && pendingQty > 0) {
     fab.classList.remove('hidden');
   } else {
     fab.classList.add('hidden');
   }
-  document.getElementById('cartFabCount').textContent = cart.reduce((s, i) => s + i.qty, 0);
+  document.getElementById('cartFabCount').textContent = pendingQty;
 }
 
 function openItemDetail(itemKey) {
@@ -2487,6 +2601,7 @@ function addToCart() {
   extrasSelected.forEach(ex => unitPrice += ex.price);
 
   const existing = cart.find(ci =>
+    !ci.ordered &&
     ci.key === currentDetailItem.key &&
     JSON.stringify(ci.extras) === JSON.stringify(extrasSelected) &&
     ci.notes === notes
@@ -2503,6 +2618,7 @@ function addToCart() {
       extras: extrasSelected,
       notes: notes,
       qty: currentDetailQty,
+      ordered: false,
       priority: false
     });
   }
@@ -2520,23 +2636,24 @@ function renderCart() {
   } else {
     document.getElementById('cartHint').style.display = cart.length > 1 ? 'flex' : 'none';
     container.innerHTML = cart.map((item, idx) => `
-      <div class="cart-item" data-idx="${idx}">
-        <div class="drag-handle" onpointerdown="startDrag(event, ${idx})" aria-label="Reordenar">
+      <div class="cart-item${item.ordered ? ' ordered' : ''}" data-idx="${idx}">
+        ${item.ordered ? '' : `<div class="drag-handle" onpointerdown="startDrag(event, ${idx})" aria-label="Reordenar">
           <span class="material-symbols-rounded">drag_indicator</span>
-        </div>
+        </div>`}
         <img class="item-thumb" src="${item.img}" alt="">
         <div class="item-details">
           <div class="name">${item.name}</div>
           ${item.extras.length > 0 ? `<div class="extras-text">${item.extras.map(e => e.name).join(', ')}</div>` : ''}
           ${item.notes ? `<div class="extras-text" style="font-style:italic">"${item.notes}"</div>` : ''}
+          ${item.ordered ? '<span class="ordered-tag">Ya en cocina</span>' : ''}
         </div>
         <div class="item-right">
           <div class="line-total">${formatPrice(item.unitPrice * item.qty)}</div>
-          <div class="cart-qty-stepper">
+          ${item.ordered ? `<div class="qty" style="font-size:13px;color:var(--text-secondary)">x${item.qty}</div>` : `<div class="cart-qty-stepper">
             <button onclick="changeCartQty(${idx}, -1)">-</button>
             <span class="qty">${item.qty}</span>
             <button onclick="changeCartQty(${idx}, 1)">+</button>
-          </div>
+          </div>`}
         </div>
       </div>
     `).join('');
@@ -2555,13 +2672,15 @@ function selectTip(btn, pct) {
   document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   tipPercent = pct;
-  updateCartTotals();
+  renderPayment();
 }
 
 let dragState = null;
 
 function startDrag(e, idx) {
   if (e.button !== undefined && e.button !== 0) return;
+  // Items already in the kitchen can't be reordered or reprioritised.
+  if (cart[idx]?.ordered) return;
   e.preventDefault();
   e.stopPropagation();
 
@@ -2647,20 +2766,39 @@ function endDrag(e) {
 }
 
 function updateCartTotals() {
-  const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
-  const tip = subtotal * tipPercent / 100;
-  const total = subtotal + tip;
-
-  document.getElementById('cartSubtotal').textContent = formatPrice(subtotal);
-  document.getElementById('cartTip').textContent = formatPrice(tip);
-  document.getElementById('cartTotal').textContent = formatPrice(total);
-  document.getElementById('cartPayBtn').textContent = `Pagar ${formatPrice(total)}`;
+  // Cart only shows the pending-items subtotal; already-ordered lines are
+  // locked and their value is collected at the end when the bill is paid.
+  const pendingTotal = cart.reduce((s, i) => i.ordered ? s : s + i.unitPrice * i.qty, 0);
+  const hasPending = cart.some(i => !i.ordered);
+  document.getElementById('cartTotal').textContent = formatPrice(pendingTotal);
+  const btn = document.getElementById('cartPayBtn');
+  btn.disabled = !hasPending;
+  btn.textContent = hasPending
+    ? `Enviar a cocina — ${formatPrice(pendingTotal)}`
+    : 'Anade platos para pedir mas';
 }
+
+let selectedPaymentMethod = 'apple';
 
 function selectPayment(el, method) {
   document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
   el.classList.add('selected');
+  selectedPaymentMethod = method;
   document.getElementById('cardFields').classList.toggle('show', method === 'card');
+  const btn = document.getElementById('confirmPayBtn');
+  const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+  const total = subtotal + subtotal * tipPercent / 100;
+  btn.textContent = method === 'cash'
+    ? `Avisar al camarero — ${formatPrice(total)}`
+    : `Confirmar pago — ${formatPrice(total)}`;
+}
+
+function submitPayment() {
+  if (selectedPaymentMethod === 'cash') {
+    navigateTo('cashPending');
+  } else {
+    navigateTo('paid');
+  }
 }
 
 function renderPayment() {
@@ -2671,12 +2809,21 @@ function renderPayment() {
   document.getElementById('paySubtotal').textContent = formatPrice(subtotal);
   document.getElementById('payTip').textContent = formatPrice(tip);
   document.getElementById('payTotal').textContent = formatPrice(total);
-  document.getElementById('confirmPayBtn').textContent = `Confirmar pago — ${formatPrice(total)}`;
+  document.getElementById('confirmPayBtn').textContent = selectedPaymentMethod === 'cash'
+    ? `Avisar al camarero — ${formatPrice(total)}`
+    : `Confirmar pago — ${formatPrice(total)}`;
+  const paidTotalEl = document.getElementById('paidTotal');
+  if (paidTotalEl) paidTotalEl.textContent = formatPrice(total);
+  const cashPendingTotalEl = document.getElementById('cashPendingTotal');
+  if (cashPendingTotalEl) cashPendingTotalEl.textContent = formatPrice(total);
 }
 
 let sendingTimer = null;
 let sendingInterval = null;
 const SENDING_DURATION_MS = 5000;
+
+let pendingBatch = [];
+let lastOrderedBatch = [];
 
 function startSending() {
   const ring = document.getElementById('sendingRing');
@@ -2684,7 +2831,12 @@ function startSending() {
   const countdownEl = document.getElementById('sendingCountdown');
   const itemsEl = document.getElementById('sendingItems');
 
-  itemsEl.innerHTML = cart.map(item => `
+  // Snapshot the lines being sent in this batch so the undo window and the
+  // confirmation screen both operate on the same set, even if new lines get
+  // added to the cart later.
+  pendingBatch = cart.filter(i => !i.ordered);
+
+  itemsEl.innerHTML = pendingBatch.map(item => `
     <div class="ci-row">
       <span>${item.name}</span>
       <span class="qty">${item.qty}x ${formatPrice(item.unitPrice * item.qty)}</span>
@@ -2718,6 +2870,11 @@ function startSending() {
 
   sendingTimer = setTimeout(() => {
     sendingTimer = null;
+    // Commit the batch: these lines are now in the kitchen and must not be
+    // editable in the cart the next time the customer opens it.
+    pendingBatch.forEach(item => { item.ordered = true; });
+    lastOrderedBatch = pendingBatch;
+    pendingBatch = [];
     navigateTo('confirmation');
   }, SENDING_DURATION_MS);
 }
@@ -2737,12 +2894,15 @@ function cancelSending(event) {
   // before the tap registered. From the customer's point of view they pressed
   // "undo" in time, so land them back on the cart regardless of the race.
   cancelSendingTimer();
+  pendingBatch = [];
   navigateTo('cart');
 }
 
 function renderConfirmation() {
   const container = document.getElementById('confirmationItems');
-  container.innerHTML = cart.map(item => `
+  // Only confirm the batch that was just sent, not the full cart history.
+  const batch = lastOrderedBatch.length ? lastOrderedBatch : cart.filter(i => i.ordered);
+  container.innerHTML = batch.map(item => `
     <div class="ci-row">
       <span>${item.name}</span>
       <span class="qty">${item.qty}x ${formatPrice(item.unitPrice * item.qty)}</span>
@@ -2816,10 +2976,6 @@ function renderStatus() {
       showToast('Tu pedido esta listo!');
     }
   }, 2000);
-}
-
-function requestBill() {
-  showToast('Cuenta solicitada — tu camarero viene en camino');
 }
 
 function showToast(msg) {
@@ -2934,12 +3090,25 @@ function applyInitialView() {
     { key: 'pulpo', qty: 1 },
     { key: 'vino-tinto', qty: 2 },
   ];
-  const needsCart = ['cart', 'payment', 'sending', 'confirmation', 'status'];
+  const needsCart = ['cart', 'payment', 'sending', 'confirmation', 'status', 'paid', 'cashPending'];
   if (needsCart.includes(view) && cart.length === 0) {
-    cart = SAMPLE_CART.map(entry => {
+    // For the cart view, seed a realistic mid-meal state: the first two lines
+    // have already been sent to the kitchen and a third line is staged as a
+    // new addition, so the "already ordered" styling is visible immediately.
+    // Every other cart-dependent screen runs after the order went through, so
+    // all sample lines are marked ordered for those views.
+    const preOrdered = view === 'cart' ? 2 : SAMPLE_CART.length;
+    cart = SAMPLE_CART.map((entry, i) => {
       const item = MENU_DATA[entry.key];
-      return { key: entry.key, name: item.name, img: item.img, unitPrice: item.price, extras: [], notes: '', qty: entry.qty };
+      return { key: entry.key, name: item.name, img: item.img, unitPrice: item.price, extras: [], notes: '', qty: entry.qty, ordered: i < preOrdered };
     });
+    if (view === 'cart') {
+      // Add a fresh, editable line on top of the already-ordered ones so the
+      // send button has something to send and the demo shows both states.
+      const extraKey = 'aceitunas';
+      const extra = MENU_DATA[extraKey];
+      cart.push({ key: extraKey, name: extra.name, img: extra.img, unitPrice: extra.price, extras: [], notes: '', qty: 1, ordered: false });
+    }
   }
 
   document.querySelectorAll('.screen').forEach(s => {
@@ -2955,6 +3124,8 @@ function applyInitialView() {
   if (view === 'sending') startSending();
   if (view === 'confirmation') renderConfirmation();
   if (view === 'status') renderStatus();
+  if (view === 'paid') renderPayment();
+  if (view === 'cashPending') renderPayment();
   updateCartFab(view);
 }
 
