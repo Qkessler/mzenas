@@ -187,7 +187,7 @@ html, body {
 .page-header h1 { font-size: 24px; font-weight: 700; }
 
 .page-header .header-actions {
-  display: flex; gap: 8px;
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
 }
 
 .header-btn {
@@ -244,33 +244,55 @@ html, body {
 .fp-stat .dot.occupied { background: var(--accent); }
 .fp-stat .dot.reserved { background: #9E9E9E; }
 
-.floor-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  max-width: 700px;
-}
-
-/* Custom layout mode: positions come from the planner (x/y/rotation) rather than the auto-grid.
- * See plans/floor-planner-spec.md §"Ops handoff". */
-.floor-grid.custom {
-  display: block;
+/* Ops floor map uses the planner's logical 1600×900 coordinate space, scaled to
+ * fit the stage wrapper. See plans/floor-planner-spec.md §"Ops handoff". */
+.floor-stage {
   position: relative;
-  width: 960px;
-  max-width: 100%;
-  height: 560px;
+  width: 100%;
+  max-width: 1600px;
+  aspect-ratio: 1600 / 900;
+  overflow: hidden;
+}
+.floor-grid {
+  position: relative;
+  width: 1600px;
+  height: 900px;
+  transform: scale(var(--floor-zoom, 1));
+  transform-origin: top left;
   background-image: radial-gradient(circle, #ece8e2 1px, transparent 1px);
   background-size: 40px 40px;
+  background-color: #fff;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
 }
-.floor-grid.custom .table-spot {
+.floor-grid .table-spot {
   position: absolute;
   aspect-ratio: auto;
 }
-.floor-grid.custom .room-prop {
+.floor-grid .room-prop {
   position: absolute;
   pointer-events: none;
   z-index: 0;
 }
+/* Plan selector dropdown next to "Editar mapa". */
+.plan-select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 28px 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+.plan-select:hover { border-color: var(--accent); }
+
 .room-prop.shape-bar { background: #3E2F25; border-radius: 4px; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; display: flex; align-items: center; justify-content: center; }
 .room-prop.shape-wall { background: #1A1A1A; border-radius: 2px; }
 .room-prop.shape-door { border: 2px dashed #8C7B6B; border-radius: 2px; background: transparent; }
@@ -300,7 +322,7 @@ html, body {
 .floor-editor { width: 100%; height: calc(100vh - 200px); min-height: 520px; }
 body.editing-map .floor-plan-stats,
 body.editing-map .table-sidebar,
-body.editing-map #floorGrid { display: none; }
+body.editing-map .floor-stage { display: none; }
 body:not(.editing-map) .floor-editor { display: none; }
 
 .table-spot {
@@ -880,7 +902,8 @@ body:not(.editing-map) .floor-editor { display: none; }
       <div class="page-header">
         <h1>Mapa de mesas</h1>
         <div class="header-actions">
-          <span style="font-size:14px;color:var(--text-secondary);padding:10px" id="tableStats">8/12 mesas ocupadas</span>
+          <span style="font-size:14px;color:var(--text-secondary);padding:10px" id="tableStats"></span>
+          <select class="plan-select" id="planSelect" aria-label="Seleccionar plano" onchange="switchActivePlan(this.value)"></select>
           <button class="edit-map-btn" id="editMapBtn" onclick="toggleFloorEdit()"><span class="material-symbols-rounded">edit</span><span id="editMapLabel">Editar mapa</span></button>
         </div>
       </div>
@@ -891,7 +914,9 @@ body:not(.editing-map) .floor-editor { display: none; }
             <div class="fp-stat"><span class="dot occupied"></span> Ocupada</div>
             <div class="fp-stat"><span class="dot reserved"></span> Reservada</div>
           </div>
-          <div class="floor-grid" id="floorGrid"></div>
+          <div class="floor-stage" id="floorStage">
+            <div class="floor-grid" id="floorGrid"></div>
+          </div>
           <div class="floor-editor" id="floorEditor"></div>
         </div>
         <div class="table-sidebar">
@@ -1146,26 +1171,36 @@ body:not(.editing-map) .floor-editor { display: none; }
 <div class="ops-toast" id="opsToast"><span class="material-symbols-rounded">check_circle</span><span id="opsToastText"></span></div>
 
 <script>
-const TABLES = [
-  { num: 1, type: '4-top', status: 'occupied', time: '42 min', order: '38,50 EUR', items: 'Gazpacho, Tortilla, Jamon iberico' },
-  { num: 2, type: '2-top', status: 'occupied', time: '28 min', order: '24,00 EUR', items: 'Croquetas, Bravas, Ensalada' },
-  { num: 3, type: '4-top', status: 'occupied', time: '55 min', order: '62,00 EUR', items: 'Pulpo, Ensalada, Chuleton' },
-  { num: 4, type: '4-top', status: 'reserved', time: '', order: '', items: 'Reserva Garcia — 14:00' },
-  { num: 5, type: '2-top', status: 'occupied', time: '35 min', order: '29,50 EUR', items: 'Croquetas, Bravas, Calamares' },
-  { num: 6, type: '2-top', status: 'occupied', time: '18 min', order: '22,00 EUR', items: 'Gazpacho, Solomillo x2' },
-  { num: 7, type: '4-top', status: 'occupied', time: '12 min', order: '31,00 EUR', items: 'Bravas, Croquetas, Pulpo' },
-  { num: 8, type: '2-top', status: 'occupied', time: '22 min', order: '18,50 EUR', items: 'Ensaladilla, Gambas al ajillo' },
-  { num: 9, type: '6-top', status: 'reserved', time: '', order: '', items: 'Reserva Lopez — 14:30' },
-  { num: 10, type: '4-top', status: 'occupied', time: '5 min', order: '0,00 EUR', items: 'Pedido recien enviado' },
-  { num: 11, type: '6-top', status: 'free', time: '', order: '', items: '' },
-  { num: 12, type: '2-top', status: 'free', time: '', order: '', items: '' },
+// FLOOR_PLANS mirrors the onboarding seed so a fresh demo lands on a populated
+// map instead of a dummy 12-table grid. Each plan owns its own tables and props
+// (walls, doors, bar, pillars). See plans/floor-planner-spec.md §"Ops handoff".
+const FLOOR_PLANS = [
+  {
+    id: 'salon',
+    name: 'Salón principal',
+    tables: [
+      { num: 1, seats: 4, shape: 'rect',  x: 200, y: 160, w: 80,  h: 160, rotation: 0, type: '4-top', status: 'occupied', time: '42 min', order: '38,50 EUR', items: 'Gazpacho, Tortilla, Jamon iberico' },
+      { num: 2, seats: 4, shape: 'rect',  x: 360, y: 160, w: 80,  h: 160, rotation: 0, type: '4-top', status: 'occupied', time: '28 min', order: '24,00 EUR', items: 'Croquetas, Bravas, Ensalada' },
+      { num: 3, seats: 2, shape: 'rect',  x: 560, y: 160, w: 80,  h: 80,  rotation: 0, type: '2-top', status: 'occupied', time: '35 min', order: '29,50 EUR', items: 'Croquetas, Bravas, Calamares' },
+      { num: 4, seats: 2, shape: 'rect',  x: 560, y: 320, w: 80,  h: 80,  rotation: 0, type: '2-top', status: 'reserved', time: '', order: '', items: 'Reserva Garcia — 14:00' },
+      { num: 5, seats: 6, shape: 'rect',  x: 200, y: 480, w: 80,  h: 240, rotation: 0, type: '6-top', status: 'free', time: '', order: '', items: '' },
+      { num: 6, seats: 4, shape: 'round', x: 760, y: 200, w: 120, h: 120, rotation: 0, type: '4-top', status: 'occupied', time: '12 min', order: '31,00 EUR', items: 'Bravas, Croquetas, Pulpo' },
+    ],
+    props: [],
+  },
+  { id: 'terraza', name: 'Terraza', tables: [], props: [] },
 ];
 
-// Room props (walls, doors, bar counter, pillars) stored alongside TABLES.
-// Empty by default; populated once the operator enters edit mode and drops props.
-let PROPS = [];
-
+let activePlanId = FLOOR_PLANS[0].id;
 let floorPlanner = null;
+let floorStageRO = null;
+
+function currentPlan() {
+  return FLOOR_PLANS.find(p => p.id === activePlanId) || FLOOR_PLANS[0];
+}
+function allTables() {
+  return FLOOR_PLANS.flatMap(p => p.tables.map(t => ({ plan: p, table: t })));
+}
 
 const MENU_ITEMS = [
   { name: 'Patatas bravas', cat: 'picar', price: '7,50', img: 'https://images.unsplash.com/photo-1565599837634-134bc3aadce8?w=100&q=60', available: true },
@@ -1198,18 +1233,15 @@ function showSection(id, btn) {
 }
 
 function renderFloorPlan() {
+  renderPlanSelect();
+  const plan = currentPlan();
   const grid = document.getElementById('floorGrid');
-  const custom = TABLES.some(t => t.x != null);
-  grid.classList.toggle('custom', custom);
 
-  const propsHtml = custom ? PROPS.map(propHtml).join('') : '';
-  const tablesHtml = TABLES.map(t => {
-    let pos = '';
-    if (custom) {
-      const w = t.rotation === 90 ? t.h : t.w;
-      const h = t.rotation === 90 ? t.w : t.h;
-      pos = `style="left:${t.x}px;top:${t.y}px;width:${w}px;height:${h}px"`;
-    }
+  const propsHtml = (plan.props || []).map(propHtml).join('');
+  const tablesHtml = plan.tables.map(t => {
+    const w = t.rotation === 90 ? t.h : t.w;
+    const h = t.rotation === 90 ? t.w : t.h;
+    const pos = `style="left:${t.x}px;top:${t.y}px;width:${w}px;height:${h}px"`;
     const shapeClass = t.shape === 'round' ? ' shape-round-spot' : '';
     return `
     <div class="table-spot ${t.status}${shapeClass}" onclick="openTablePopover(${t.num}, event)" data-table="${t.num}" ${pos}>
@@ -1223,8 +1255,50 @@ function renderFloorPlan() {
 
   grid.innerHTML = propsHtml + tablesHtml;
 
-  const occ = TABLES.filter(t => t.status === 'occupied').length;
-  document.getElementById('tableStats').textContent = `${occ}/${TABLES.length} mesas ocupadas`;
+  const occ = plan.tables.filter(t => t.status === 'occupied').length;
+  const total = plan.tables.length;
+  const totalAll = FLOOR_PLANS.reduce((s, p) => s + p.tables.length, 0);
+  const suffix = FLOOR_PLANS.length > 1 ? ` (${totalAll} mesas en total)` : '';
+  document.getElementById('tableStats').textContent = total
+    ? `${occ}/${total} mesas ocupadas en ${plan.name}${suffix}`
+    : `${plan.name} sin mesas — pulsa Editar mapa para añadir`;
+
+  ensureFloorStageObserver();
+  updateFloorZoom();
+}
+
+function renderPlanSelect() {
+  const sel = document.getElementById('planSelect');
+  if (!sel) return;
+  sel.innerHTML = FLOOR_PLANS.map(p =>
+    `<option value="${p.id}"${p.id === activePlanId ? ' selected' : ''}>${p.name}</option>`
+  ).join('');
+}
+
+function switchActivePlan(planId) {
+  if (!FLOOR_PLANS.some(p => p.id === planId)) return;
+  activePlanId = planId;
+  closePopover();
+  renderFloorPlan();
+}
+
+// Auto-scale the 1600×900 logical grid to whatever width the stage wrapper gives
+// us. Aspect-ratio on the wrapper keeps the height honest so the fit-to-width
+// zoom also fits vertically.
+function ensureFloorStageObserver() {
+  if (floorStageRO) return;
+  const stage = document.getElementById('floorStage');
+  if (!stage || !('ResizeObserver' in window)) return;
+  floorStageRO = new ResizeObserver(() => updateFloorZoom());
+  floorStageRO.observe(stage);
+}
+function updateFloorZoom() {
+  const stage = document.getElementById('floorStage');
+  if (!stage) return;
+  const w = stage.clientWidth;
+  if (!w) return;
+  const zoom = Math.min(1, w / 1600);
+  stage.style.setProperty('--floor-zoom', zoom);
 }
 
 function propHtml(p) {
@@ -1233,7 +1307,7 @@ function propHtml(p) {
   return `<div class="room-prop shape-${p.shape}" style="left:${p.x}px;top:${p.y}px;width:${w}px;height:${h}px">${p.shape === 'bar' ? 'Barra' : ''}</div>`;
 }
 
-// Catalog-key inference for TABLES rows so they round-trip through the planner
+// Catalog-key inference for table rows so they round-trip through the planner
 // without losing their 2-top/4-top/6-top label.
 function catalogKeyForTable(t) {
   if (t.shape === 'round') return 'round-' + t.seats;
@@ -1256,70 +1330,87 @@ function toggleFloorEdit() {
   }
 }
 
-function tableToPlannerItem(t, idx) {
+function tableToPlannerItem(t) {
   const seats = t.seats != null ? t.seats : parseInt(t.type, 10);
   const shape = t.shape || 'rect';
-  const base = { w: shape === 'rect' ? 80 : (seats <= 2 ? 80 : seats <= 4 ? 120 : 160), h: shape === 'rect' ? (seats * 40) : (seats <= 2 ? 80 : seats <= 4 ? 120 : 160) };
-  // If the table already has saved coords, reuse them; otherwise lay out in a grid.
-  const x = t.x != null ? t.x : 40 + (idx % 5) * 120;
-  const y = t.y != null ? t.y : 40 + Math.floor(idx / 5) * 180;
   return {
     kind: 'seat', shape, seats, num: t.num,
-    x, y, rotation: t.rotation || 0,
-    w: t.w || base.w, h: t.h || base.h,
+    x: t.x, y: t.y, rotation: t.rotation || 0,
+    w: t.w, h: t.h,
     catalogKey: catalogKeyForTable({ shape, seats }),
   };
 }
 
 function mountOpsPlanner() {
   const host = document.getElementById('floorEditor');
-  const seed = TABLES.map(tableToPlannerItem)
-    .concat(PROPS.map(p => Object.assign({}, p, { kind: 'prop', catalogKey: p.shape })));
+  const seed = {
+    plans: FLOOR_PLANS.map(p => ({
+      id: p.id,
+      name: p.name,
+      items: p.tables.map(tableToPlannerItem)
+        .concat((p.props || []).map(pr => Object.assign({}, pr, { kind: 'prop', catalogKey: pr.shape }))),
+    })),
+    activePlanId,
+  };
   host.innerHTML = '';
   host.classList.add('fp-root');
-  floorPlanner = initFloorPlanner(host, { mode: 'ops-edit', seed });
+  floorPlanner = initFloorPlanner(host, { mode: 'ops-edit', seed, activePlanId });
 }
 
 function commitOpsPlanner() {
   if (!floorPlanner) return;
-  const { items } = floorPlanner.getState();
+  const snapshot = floorPlanner.getState();
 
-  // Preserve status/time/order/items on existing tables by matching on num.
+  // Preserve status/time/order/items on existing tables by matching on
+  // (planId, num). Tables that moved between plans or got renumbered lose
+  // their status — matching the user's mental model of "this is a new table".
   const preserved = {};
-  TABLES.forEach(t => { preserved[t.num] = { status: t.status, time: t.time, order: t.order, items: t.items }; });
-
-  const newTables = [];
-  const newProps = [];
-  items.forEach(it => {
-    if (it.kind === 'seat') {
-      const base = preserved[it.num] || { status: 'free', time: '', order: '', items: '' };
-      newTables.push({
-        num: it.num,
-        type: `${it.seats}-top`,
-        seats: it.seats,
-        shape: it.shape,
-        x: it.x, y: it.y, w: it.w, h: it.h, rotation: it.rotation,
-        status: base.status, time: base.time, order: base.order, items: base.items,
-      });
-    } else {
-      newProps.push({ shape: it.shape, x: it.x, y: it.y, w: it.w, h: it.h, rotation: it.rotation });
-    }
+  FLOOR_PLANS.forEach(p => {
+    p.tables.forEach(t => {
+      preserved[`${p.id}:${t.num}`] = { status: t.status, time: t.time, order: t.order, items: t.items };
+    });
   });
-  newTables.sort((a, b) => (a.num || 0) - (b.num || 0));
 
-  TABLES.length = 0;
-  newTables.forEach(t => TABLES.push(t));
-  PROPS = newProps;
+  const nextPlans = snapshot.plans.map(sp => {
+    const tables = [];
+    const props = [];
+    sp.items.forEach(it => {
+      if (it.kind === 'seat') {
+        const base = preserved[`${sp.id}:${it.num}`] || { status: 'free', time: '', order: '', items: '' };
+        tables.push({
+          num: it.num,
+          type: `${it.seats}-top`,
+          seats: it.seats,
+          shape: it.shape,
+          x: it.x, y: it.y, w: it.w, h: it.h, rotation: it.rotation,
+          status: base.status, time: base.time, order: base.order, items: base.items,
+        });
+      } else {
+        props.push({ shape: it.shape, x: it.x, y: it.y, w: it.w, h: it.h, rotation: it.rotation });
+      }
+    });
+    tables.sort((a, b) => (a.num || 0) - (b.num || 0));
+    return { id: sp.id, name: sp.name, tables, props };
+  });
+
+  FLOOR_PLANS.length = 0;
+  nextPlans.forEach(p => FLOOR_PLANS.push(p));
+  if (!FLOOR_PLANS.some(p => p.id === activePlanId)) {
+    activePlanId = FLOOR_PLANS[0] ? FLOOR_PLANS[0].id : null;
+  } else if (snapshot.activePlanId && FLOOR_PLANS.some(p => p.id === snapshot.activePlanId)) {
+    activePlanId = snapshot.activePlanId;
+  }
 
   floorPlanner.destroy();
   floorPlanner = null;
   document.getElementById('floorEditor').classList.remove('fp-root');
   renderFloorPlan();
-  showOpsToast('Mapa actualizado');
+  const totalTables = FLOOR_PLANS.reduce((s, p) => s + p.tables.length, 0);
+  showOpsToast(`Mapa actualizado · ${FLOOR_PLANS.length} plano(s), ${totalTables} mesas`);
 }
 
 function openTablePopover(num, e) {
-  const table = TABLES.find(t => t.num === num);
+  const table = currentPlan().tables.find(t => t.num === num);
   if (!table) return;
   selectedTableNum = num;
 
@@ -1359,7 +1450,7 @@ function closePopover() {
 function freeTable() {
   if (selectedTableNum === null) return;
   const num = selectedTableNum;
-  const table = TABLES.find(t => t.num === num);
+  const table = currentPlan().tables.find(t => t.num === num);
   if (table) {
     table.status = 'free';
     table.time = '';
