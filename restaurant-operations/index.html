@@ -67,12 +67,23 @@ html, body {
   background: var(--bg);
   color: var(--text-primary);
   height: 100%; overflow: hidden;
+  /* Belt-and-braces guard so a stray wide child (e.g. the 1600px floor-grid
+   * before the scale transform applies) can never produce a horizontal
+   * scrollbar on the whole page. */
+  max-width: 100vw;
   -webkit-font-smoothing: antialiased;
 }
 
 .app-layout {
   display: flex;
   height: 100vh;
+  /* `min-width: 0` on a flex container lets its flex items honor their own
+   * `min-width: 0`. Without it the default `min-width: auto` on children
+   * bubbles up the document-intrinsic width (the 1600px floor-grid), which
+   * is what was pushing the sidebar off-screen and producing the horizontal
+   * scrollbar. */
+  min-width: 0;
+  max-width: 100vw;
 }
 
 /* Sidebar */
@@ -173,7 +184,11 @@ html, body {
 /* Main Content */
 .main-content {
   flex: 1;
+  /* See `.app-layout` comment — without `min-width: 0` this flex item grows
+   * to its intrinsic content width and drags the sidebar off-screen. */
+  min-width: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 0;
 }
 
@@ -222,6 +237,7 @@ html, body {
 
 .floor-plan {
   flex: 1;
+  min-width: 0;
   padding: 24px 32px;
   position: relative;
 }
@@ -459,6 +475,8 @@ body:not(.editing-map) .floor-editor { display: none; }
 
 .popover-btn-free { background: var(--success); color: white; }
 .popover-btn-free:hover { opacity: 0.9; }
+.popover-btn-reserve { background: var(--accent); color: white; }
+.popover-btn-reserve:hover { opacity: 0.9; }
 .popover-btn-close { background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); }
 
 /* ==================== DASHBOARD ==================== */
@@ -866,6 +884,68 @@ body:not(.editing-map) .floor-editor { display: none; }
 
 .modal-btn-cancel { background: var(--bg); color: var(--text-secondary); }
 .modal-btn-save { background: var(--primary); color: white; }
+
+/* ==================== RESPONSIVE ====================
+ * The ops UI is a dashboard shell (fixed sidebar + wide content). Without
+ * these rules, the 240px sidebar, 4-col stats grid, 2fr/1fr dashboard and
+ * side-by-side floor-plan + reservation panel force horizontal scroll on
+ * anything narrower than a laptop. The breakpoints below collapse the layout
+ * progressively: first the content grids, then the sidebar itself shrinks to
+ * an icon rail so phones keep the same navigation without stealing half the
+ * viewport. */
+@media (max-width: 1100px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .table-map-layout { flex-direction: column; height: auto; }
+  .table-sidebar {
+    width: auto;
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 720px) {
+  :root { --sidebar-w: 64px; }
+
+  .sidebar-logo { padding: 16px 8px 8px; display: flex; justify-content: center; }
+  .sidebar-logo .mz-wordmark,
+  .sidebar-restaurant { display: none; }
+  .sidebar-nav { padding: 0 8px; }
+  .nav-item,
+  .nav-item-kitchen { justify-content: center; padding: 12px 8px; gap: 0; }
+  .nav-item .nav-label,
+  .nav-item-kitchen .nav-label { display: none; }
+  .sidebar-bottom { padding: 12px 8px; }
+
+  .page-header { padding: 16px 16px 0; flex-wrap: wrap; gap: 10px; }
+  .page-header h1 { font-size: 20px; }
+  .header-btn { padding: 8px 14px; font-size: 13px; }
+
+  .dashboard-content,
+  .menu-mgmt,
+  .config-content,
+  .floor-plan,
+  .table-sidebar { padding: 16px; }
+
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .stat-card { padding: 16px; }
+  .stat-card .stat-value { font-size: 22px; }
+
+  /* Drop the redundant text "Estado" column on narrow screens — the toggle
+   * already conveys available / unavailable. */
+  .menu-table-header,
+  .menu-table-row {
+    grid-template-columns: 48px 1fr 72px 56px;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .menu-table-header > :nth-child(4),
+  .menu-table-row .menu-row-status { display: none; }
+  .menu-row-img { width: 40px; height: 40px; }
+
+  .modal { width: calc(100vw - 32px); padding: 20px; }
+  .table-popover { width: calc(100vw - 32px); max-width: 300px; }
+}
 </style>
 </head>
 <body>
@@ -876,21 +956,21 @@ body:not(.editing-map) .floor-editor { display: none; }
     <div class="sidebar-restaurant">Tu Restaurante</div>
     <nav class="sidebar-nav">
       <button class="nav-item active" onclick="showSection('tablemap', this)">
-        <span class="material-symbols-rounded">table_restaurant</span> Mapa de mesas
+        <span class="material-symbols-rounded">table_restaurant</span> <span class="nav-label">Mapa de mesas</span>
       </button>
       <button class="nav-item" onclick="showSection('dashboard', this)">
-        <span class="material-symbols-rounded">dashboard</span> Dashboard
+        <span class="material-symbols-rounded">dashboard</span> <span class="nav-label">Dashboard</span>
       </button>
       <button class="nav-item" onclick="showSection('menu', this)">
-        <span class="material-symbols-rounded">restaurant_menu</span> Gestion de carta
+        <span class="material-symbols-rounded">restaurant_menu</span> <span class="nav-label">Gestion de carta</span>
       </button>
       <button class="nav-item" onclick="showSection('config', this)">
-        <span class="material-symbols-rounded">settings</span> Configuracion
+        <span class="material-symbols-rounded">settings</span> <span class="nav-label">Configuracion</span>
       </button>
     </nav>
     <div class="sidebar-bottom">
       <button class="nav-item-kitchen" onclick="window.open('/restaurant-kitchen/','_blank')">
-        <span class="material-symbols-rounded">soup_kitchen</span> Vista cocina (KDS)
+        <span class="material-symbols-rounded">soup_kitchen</span> <span class="nav-label">Vista cocina (KDS)</span>
       </button>
     </div>
   </div>
@@ -1149,7 +1229,22 @@ body:not(.editing-map) .floor-editor { display: none; }
   <div id="popoverContent"></div>
   <div class="popover-actions">
     <button class="popover-btn popover-btn-close" onclick="closePopover()">Cerrar</button>
+    <button class="popover-btn popover-btn-reserve" id="popoverReserveBtn" onclick="openReserveModal()">Reservar</button>
     <button class="popover-btn popover-btn-free" id="popoverFreeBtn" onclick="freeTable()">Liberar mesa</button>
+  </div>
+</div>
+
+<!-- Reserve Table Modal -->
+<div class="modal-overlay" id="reserveModal">
+  <div class="modal">
+    <h3 id="reserveModalTitle">Reservar mesa</h3>
+    <div class="modal-field"><label>Nombre</label><input type="text" id="reserveName" placeholder="Ej: Garcia"></div>
+    <div class="modal-field"><label>Personas</label><input type="number" id="reserveGuests" min="1" placeholder="4"></div>
+    <div class="modal-field"><label>Hora</label><input type="time" id="reserveTime" value="14:00"></div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="closeReserveModal()">Cancelar</button>
+      <button class="modal-btn modal-btn-save" onclick="confirmReserve()">Guardar</button>
+    </div>
   </div>
 </div>
 
@@ -1221,6 +1316,7 @@ const MENU_ITEMS = [
 
 let currentMenuCat = 'all';
 let selectedTableNum = null;
+let reserveTargetNum = null;
 
 function showSection(id, btn) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -1416,23 +1512,29 @@ function openTablePopover(num, e) {
 
   document.getElementById('popoverTitle').textContent = `Mesa ${num}`;
 
+  const freeBtn = document.getElementById('popoverFreeBtn');
+  const reserveBtn = document.getElementById('popoverReserveBtn');
+
   if (table.status === 'occupied') {
     document.getElementById('popoverContent').innerHTML = `
       <div class="popover-row"><span class="label">Tiempo</span><span>${table.time}</span></div>
       <div class="popover-row"><span class="label">Pedido</span><span>${table.order}</span></div>
       <div class="popover-row"><span class="label">Platos</span><span>${table.items}</span></div>
     `;
-    document.getElementById('popoverFreeBtn').style.display = '';
+    freeBtn.style.display = '';
+    reserveBtn.style.display = 'none';
   } else if (table.status === 'reserved') {
     document.getElementById('popoverContent').innerHTML = `
       <div class="popover-row"><span class="label">Reserva</span><span>${table.items}</span></div>
     `;
-    document.getElementById('popoverFreeBtn').style.display = 'none';
+    freeBtn.style.display = 'none';
+    reserveBtn.style.display = 'none';
   } else {
     document.getElementById('popoverContent').innerHTML = `
       <div class="popover-row"><span class="label">Estado</span><span>Disponible</span></div>
     `;
-    document.getElementById('popoverFreeBtn').style.display = 'none';
+    freeBtn.style.display = 'none';
+    reserveBtn.style.display = '';
   }
 
   const popover = document.getElementById('tablePopover');
@@ -1445,6 +1547,46 @@ function openTablePopover(num, e) {
 function closePopover() {
   document.getElementById('tablePopover').classList.remove('show');
   selectedTableNum = null;
+}
+
+function openReserveModal() {
+  if (selectedTableNum === null) return;
+  // Stash the target on a dedicated var: the global click handler below can
+  // wipe selectedTableNum while the user is interacting with the modal, which
+  // used to leave confirmReserve with nothing to reserve.
+  reserveTargetNum = selectedTableNum;
+  document.getElementById('reserveModalTitle').textContent = `Reservar mesa ${reserveTargetNum}`;
+  document.getElementById('reserveName').value = '';
+  const table = currentPlan().tables.find(t => t.num === reserveTargetNum);
+  document.getElementById('reserveGuests').value = table ? table.seats : '';
+  document.getElementById('reserveTime').value = '14:00';
+  document.getElementById('reserveModal').classList.add('show');
+}
+
+function closeReserveModal() {
+  document.getElementById('reserveModal').classList.remove('show');
+  reserveTargetNum = null;
+}
+
+function confirmReserve() {
+  if (reserveTargetNum === null) { closeReserveModal(); return; }
+  const name = document.getElementById('reserveName').value.trim() || 'Sin nombre';
+  const guests = document.getElementById('reserveGuests').value || '';
+  const time = document.getElementById('reserveTime').value || '';
+  const num = reserveTargetNum;
+  const table = currentPlan().tables.find(t => t.num === num);
+  if (table) {
+    table.status = 'reserved';
+    table.time = '';
+    table.order = '';
+    const guestsTxt = guests ? ` (${guests} pers.)` : '';
+    const timeTxt = time ? ` — ${time}` : '';
+    table.items = `Reserva ${name}${guestsTxt}${timeTxt}`;
+  }
+  closeReserveModal();
+  closePopover();
+  renderFloorPlan();
+  showOpsToast(`Mesa ${num} reservada`);
 }
 
 function freeTable() {
@@ -1568,6 +1710,10 @@ function showOpsToast(msg) {
 }
 
 document.addEventListener('click', (e) => {
+  // A click inside any modal overlay must not be treated as "clicked outside
+  // the popover": doing so nuked selectedTableNum mid-reservation and the
+  // Guardar handler would then find nothing to update.
+  if (e.target.closest('.modal-overlay')) return;
   const popover = document.getElementById('tablePopover');
   if (popover.classList.contains('show') && !popover.contains(e.target) && !e.target.closest('.table-spot')) {
     closePopover();
