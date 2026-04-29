@@ -632,29 +632,25 @@ html, body {
 
 .qr-preview {
   width: 200px; height: 200px;
-  background: var(--surface);
+  background: #fff;
   border-radius: 16px;
   margin: 0 auto 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--border-light);
+  padding: 12px;
+  box-sizing: border-box;
+  transition: transform 0.15s ease;
 }
 
-.qr-grid {
-  width: 140px; height: 140px;
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  grid-template-rows: repeat(7, 1fr);
-  gap: 2px;
-}
+.qr-preview:hover { transform: scale(1.02); }
 
-.qr-cell {
-  border-radius: 2px;
-  background: var(--primary);
+.qr-preview img {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
-
-.qr-cell.white { background: transparent; }
 
 .qr-label {
   font-size: 13px;
@@ -828,7 +824,7 @@ html, body {
         <h1>Tu menu digital esta listo!</h1>
         <p>Los clientes de Tu Restaurante ya pueden escanear el QR y pedir desde su movil.</p>
 
-        <div class="qr-preview" id="qrPreview"></div>
+        <a class="qr-preview" id="qrPreview" href="customer-flow.html" target="_blank" aria-label="Abrir flujo del cliente"></a>
         <div class="qr-label">Escanea para ver tu menu</div>
 
         <div class="live-actions">
@@ -1088,25 +1084,7 @@ function focusItemName(cat, idx) {
 // === LIVE ===
 function generateQR() {
   const container = document.getElementById('qrPreview');
-  const pattern = [
-    1,1,1,0,1,1,1,
-    1,0,1,0,1,0,1,
-    1,1,1,0,1,1,1,
-    0,0,0,1,0,0,0,
-    1,1,0,1,0,1,1,
-    0,1,0,0,1,0,1,
-    1,0,1,1,1,1,1,
-  ];
-
-  const grid = document.createElement('div');
-  grid.className = 'qr-grid';
-  pattern.forEach(v => {
-    const cell = document.createElement('div');
-    cell.className = `qr-cell${v ? '' : ' white'}`;
-    grid.appendChild(cell);
-  });
-  container.innerHTML = '';
-  container.appendChild(grid);
+  container.innerHTML = '<img src="assets/qr-customer-flow.svg" alt="QR que lleva al flujo del cliente">';
 }
 
 function triggerConfetti() {
