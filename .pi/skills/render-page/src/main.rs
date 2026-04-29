@@ -119,7 +119,12 @@ fn resolve_target(target: &str) -> Result<(String, String)> {
         return Ok((target.to_string(), host));
     }
 
-    let p = Path::new(target);
+    let (path_part, query_part) = match target.split_once('?') {
+        Some((p, q)) => (p, Some(q)),
+        None => (target, None),
+    };
+
+    let p = Path::new(path_part);
     if !p.exists() {
         bail!(
             "target `{target}` is neither an existing file nor an http(s):// URL"
@@ -132,7 +137,10 @@ fn resolve_target(target: &str) -> Result<(String, String)> {
         .and_then(|s| s.to_str())
         .unwrap_or("page")
         .to_string();
-    let url = format!("file://{}", abs.display());
+    let url = match query_part {
+        Some(q) => format!("file://{}?{}", abs.display(), q),
+        None => format!("file://{}", abs.display()),
+    };
     Ok((url, label))
 }
 

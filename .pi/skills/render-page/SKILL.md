@@ -40,6 +40,24 @@ From the repo root:
 ./.pi/skills/render-page/target/release/render-page https://mzenas.com
 ```
 
+Local paths accept an appended query string, which is forwarded to the `file://` URL. Use it with the `?view=...` hooks the demos expose:
+
+```bash
+# Customer flow: landing | categories | items | cart | payment | confirmation | status
+./.pi/skills/render-page/target/release/render-page 'customer-flow.html?view=cart' --label cf-cart
+
+# Operations dashboard: tablemap | dashboard | menu | config (+ optional &edit=1 for floor-plan edit mode)
+./.pi/skills/render-page/target/release/render-page 'restaurant-operations.html?view=menu' --label ops-menu
+
+# AI onboarding: numeric stage 0–5 (also accepts ?stage=N for back-compat)
+./.pi/skills/render-page/target/release/render-page 'ai-onboarding.html?view=3' --label ob-review
+
+# Kitchen KDS: ?view=order&id=<n> opens the order detail panel
+./.pi/skills/render-page/target/release/render-page 'restaurant-kitchen.html?view=order&id=2' --label kds-panel
+```
+
+Cart-dependent customer-flow views (cart, payment, confirmation, status) auto-seed the cart with the last-order sample so the page renders with realistic content.
+
 Output looks like:
 
 ```
