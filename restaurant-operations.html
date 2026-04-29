@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/floor-planner.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -235,6 +236,58 @@ html, body {
   gap: 16px;
   max-width: 700px;
 }
+
+/* Custom layout mode: positions come from the planner (x/y/rotation) rather than the auto-grid.
+ * See plans/floor-planner-spec.md §"Ops handoff". */
+.floor-grid.custom {
+  display: block;
+  position: relative;
+  width: 960px;
+  max-width: 100%;
+  height: 560px;
+  background-image: radial-gradient(circle, #ece8e2 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.floor-grid.custom .table-spot {
+  position: absolute;
+  aspect-ratio: auto;
+}
+.floor-grid.custom .room-prop {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+}
+.room-prop.shape-bar { background: #3E2F25; border-radius: 4px; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; display: flex; align-items: center; justify-content: center; }
+.room-prop.shape-wall { background: #1A1A1A; border-radius: 2px; }
+.room-prop.shape-door { border: 2px dashed #8C7B6B; border-radius: 2px; background: transparent; }
+.room-prop.shape-pillar { background: #BFB5A8; border-radius: 50%; }
+
+/* Editar mapa button */
+.edit-map-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: border-color 0.15s var(--ease);
+}
+.edit-map-btn:hover { border-color: var(--accent); color: var(--accent); }
+.edit-map-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.edit-map-btn .material-symbols-rounded { font-size: 18px; }
+
+/* Planner host inside ops view */
+.floor-editor { width: 100%; height: calc(100vh - 200px); min-height: 520px; }
+body.editing-map .floor-plan-stats,
+body.editing-map .table-sidebar,
+body.editing-map #floorGrid { display: none; }
+body:not(.editing-map) .floor-editor { display: none; }
 
 .table-spot {
   aspect-ratio: 1;
@@ -814,6 +867,7 @@ html, body {
         <h1>Mapa de mesas</h1>
         <div class="header-actions">
           <span style="font-size:14px;color:var(--text-secondary);padding:10px" id="tableStats">8/12 mesas ocupadas</span>
+          <button class="edit-map-btn" id="editMapBtn" onclick="toggleFloorEdit()"><span class="material-symbols-rounded">edit</span><span id="editMapLabel">Editar mapa</span></button>
         </div>
       </div>
       <div class="table-map-layout">
@@ -824,6 +878,7 @@ html, body {
             <div class="fp-stat"><span class="dot reserved"></span> Reservada</div>
           </div>
           <div class="floor-grid" id="floorGrid"></div>
+          <div class="floor-editor" id="floorEditor"></div>
         </div>
         <div class="table-sidebar">
           <h3>Proximas reservas</h3>
@@ -1092,6 +1147,12 @@ const TABLES = [
   { num: 12, type: '2-top', status: 'free', time: '', order: '', items: '' },
 ];
 
+// Room props (walls, doors, bar counter, pillars) stored alongside TABLES.
+// Empty by default; populated once the operator enters edit mode and drops props.
+let PROPS = [];
+
+let floorPlanner = null;
+
 const MENU_ITEMS = [
   { name: 'Patatas bravas', cat: 'picar', price: '7,50', img: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=100&q=60', available: true },
   { name: 'Croquetas de jamon', cat: 'picar', price: '8,50', img: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=100&q=60', available: true },
@@ -1124,17 +1185,123 @@ function showSection(id, btn) {
 
 function renderFloorPlan() {
   const grid = document.getElementById('floorGrid');
-  grid.innerHTML = TABLES.map(t => `
-    <div class="table-spot ${t.status}" onclick="openTablePopover(${t.num}, event)" data-table="${t.num}">
+  const custom = TABLES.some(t => t.x != null);
+  grid.classList.toggle('custom', custom);
+
+  const propsHtml = custom ? PROPS.map(propHtml).join('') : '';
+  const tablesHtml = TABLES.map(t => {
+    let pos = '';
+    if (custom) {
+      const w = t.rotation === 90 ? t.h : t.w;
+      const h = t.rotation === 90 ? t.w : t.h;
+      pos = `style="left:${t.x}px;top:${t.y}px;width:${w}px;height:${h}px"`;
+    }
+    const shapeClass = t.shape === 'round' ? ' shape-round-spot' : '';
+    return `
+    <div class="table-spot ${t.status}${shapeClass}" onclick="openTablePopover(${t.num}, event)" data-table="${t.num}" ${pos}>
       ${t.time ? `<span class="time-badge">${t.time}</span>` : ''}
       <span class="table-num">${t.num}</span>
       <span class="table-type">${t.type}</span>
       <span class="table-status-label">${t.status === 'free' ? 'Libre' : t.status === 'occupied' ? 'Ocupada' : 'Reservada'}</span>
     </div>
-  `).join('');
+    `;
+  }).join('');
+
+  grid.innerHTML = propsHtml + tablesHtml;
 
   const occ = TABLES.filter(t => t.status === 'occupied').length;
   document.getElementById('tableStats').textContent = `${occ}/${TABLES.length} mesas ocupadas`;
+}
+
+function propHtml(p) {
+  const w = p.rotation === 90 ? p.h : p.w;
+  const h = p.rotation === 90 ? p.w : p.h;
+  return `<div class="room-prop shape-${p.shape}" style="left:${p.x}px;top:${p.y}px;width:${w}px;height:${h}px">${p.shape === 'bar' ? 'Barra' : ''}</div>`;
+}
+
+// Catalog-key inference for TABLES rows so they round-trip through the planner
+// without losing their 2-top/4-top/6-top label.
+function catalogKeyForTable(t) {
+  if (t.shape === 'round') return 'round-' + t.seats;
+  return 'rect-' + t.seats;
+}
+
+function toggleFloorEdit() {
+  const editing = document.body.classList.toggle('editing-map');
+  const btn = document.getElementById('editMapBtn');
+  const label = document.getElementById('editMapLabel');
+  if (editing) {
+    btn.classList.add('active');
+    label.textContent = 'Terminar edición';
+    closePopover();
+    mountOpsPlanner();
+  } else {
+    btn.classList.remove('active');
+    label.textContent = 'Editar mapa';
+    commitOpsPlanner();
+  }
+}
+
+function tableToPlannerItem(t, idx) {
+  const seats = t.seats != null ? t.seats : parseInt(t.type, 10);
+  const shape = t.shape || 'rect';
+  const base = { w: shape === 'rect' ? 80 : (seats <= 2 ? 80 : seats <= 4 ? 120 : 160), h: shape === 'rect' ? (seats * 40) : (seats <= 2 ? 80 : seats <= 4 ? 120 : 160) };
+  // If the table already has saved coords, reuse them; otherwise lay out in a grid.
+  const x = t.x != null ? t.x : 40 + (idx % 5) * 120;
+  const y = t.y != null ? t.y : 40 + Math.floor(idx / 5) * 180;
+  return {
+    kind: 'seat', shape, seats, num: t.num,
+    x, y, rotation: t.rotation || 0,
+    w: t.w || base.w, h: t.h || base.h,
+    catalogKey: catalogKeyForTable({ shape, seats }),
+  };
+}
+
+function mountOpsPlanner() {
+  const host = document.getElementById('floorEditor');
+  const seed = TABLES.map(tableToPlannerItem)
+    .concat(PROPS.map(p => Object.assign({}, p, { kind: 'prop', catalogKey: p.shape })));
+  host.innerHTML = '';
+  host.classList.add('fp-root');
+  floorPlanner = initFloorPlanner(host, { mode: 'ops-edit', seed });
+}
+
+function commitOpsPlanner() {
+  if (!floorPlanner) return;
+  const { items } = floorPlanner.getState();
+
+  // Preserve status/time/order/items on existing tables by matching on num.
+  const preserved = {};
+  TABLES.forEach(t => { preserved[t.num] = { status: t.status, time: t.time, order: t.order, items: t.items }; });
+
+  const newTables = [];
+  const newProps = [];
+  items.forEach(it => {
+    if (it.kind === 'seat') {
+      const base = preserved[it.num] || { status: 'free', time: '', order: '', items: '' };
+      newTables.push({
+        num: it.num,
+        type: `${it.seats}-top`,
+        seats: it.seats,
+        shape: it.shape,
+        x: it.x, y: it.y, w: it.w, h: it.h, rotation: it.rotation,
+        status: base.status, time: base.time, order: base.order, items: base.items,
+      });
+    } else {
+      newProps.push({ shape: it.shape, x: it.x, y: it.y, w: it.w, h: it.h, rotation: it.rotation });
+    }
+  });
+  newTables.sort((a, b) => (a.num || 0) - (b.num || 0));
+
+  TABLES.length = 0;
+  newTables.forEach(t => TABLES.push(t));
+  PROPS = newProps;
+
+  floorPlanner.destroy();
+  floorPlanner = null;
+  document.getElementById('floorEditor').classList.remove('fp-root');
+  renderFloorPlan();
+  showOpsToast('Mapa actualizado');
 }
 
 function openTablePopover(num, e) {
@@ -1305,13 +1472,20 @@ document.addEventListener('click', (e) => {
 renderFloorPlan();
 renderMenuTable();
 
-// Dev hook: ?view=<section> jumps straight to a section (tablemap|dashboard|menu|config) for screenshots/testing.
+// Dev hook: ?view=<section> jumps straight to a section (tablemap|dashboard|menu|config).
+// ?edit=1 additionally auto-enters floor-plan edit mode.
 (function applyInitialView() {
-  const view = new URLSearchParams(location.search).get('view');
-  if (!view) return;
-  const btn = document.querySelector(`.nav-item[onclick*="showSection('${view}'"]`);
-  if (btn) showSection(view, btn);
+  const params = new URLSearchParams(location.search);
+  const view = params.get('view');
+  if (view) {
+    const btn = document.querySelector(`.nav-item[onclick*="showSection('${view}'"]`);
+    if (btn) showSection(view, btn);
+  }
+  if (params.get('edit') === '1') {
+    window.addEventListener('load', () => setTimeout(toggleFloorEdit, 100));
+  }
 })();
 </script>
+<script src="assets/floor-planner.js"></script>
 </body>
 </html>

@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/floor-planner.css">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -135,6 +136,8 @@ html, body {
   max-width: 640px;
   animation: fade-in 400ms var(--ease);
 }
+
+.stage.stage-wide { max-width: 1200px; }
 
 .stage.active { display: block; }
 
@@ -599,7 +602,7 @@ html, body {
   margin-top: 24px;
 }
 
-/* ==================== STAGE 5: LIVE ==================== */
+/* ==================== STAGE 6: LIVE ==================== */
 .live-content { text-align: center; }
 
 .live-check {
@@ -695,6 +698,7 @@ html, body {
       <div class="step-dot" id="dot-2"></div>
       <div class="step-dot" id="dot-3"></div>
       <div class="step-dot" id="dot-4"></div>
+      <div class="step-dot" id="dot-5"></div>
     </div>
     <span style="width:80px"></span>
   </div>
@@ -810,13 +814,26 @@ html, body {
         <div id="reviewArea"></div>
         <div class="review-actions">
           <button class="ob-btn ob-btn-secondary" onclick="goToStage(2)">Volver a analizar</button>
-          <button class="ob-btn" onclick="goToStage(4)">Publicar menu <span class="material-symbols-rounded" style="font-size:20px">rocket_launch</span></button>
+          <button class="ob-btn" onclick="goToStage(4)">Siguiente: diseñar sala <span class="material-symbols-rounded" style="font-size:20px">arrow_forward</span></button>
         </div>
       </div>
     </div>
 
-    <!-- STAGE 5: LIVE -->
-    <div class="stage" id="stage-4">
+    <!-- STAGE 5: FLOOR PLANNER -->
+    <div class="stage stage-wide" id="stage-4">
+      <div class="floor-plan-content">
+        <h2>Diseña tu sala</h2>
+        <p class="subtitle">Arrastra mesas y elementos desde la izquierda. Haz clic en cualquiera para rotarlo, duplicarlo o cambiar su número. Podrás editarlo más tarde desde el panel.</p>
+        <div class="fp-root" id="floorPlanner"></div>
+        <div class="review-actions">
+          <button class="ob-btn ob-btn-secondary" onclick="goToStage(3)">Volver</button>
+          <button class="ob-btn" onclick="goToStage(5)">Publicar menu <span class="material-symbols-rounded" style="font-size:20px">rocket_launch</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAGE 6: LIVE -->
+    <div class="stage" id="stage-5">
       <div class="live-content">
         <div class="live-check">
           <span class="material-symbols-rounded">check</span>
@@ -880,6 +897,7 @@ const EXTRACTED_MENU = {
 
 let currentStage = 0;
 let visitedStages = [0];
+const TOTAL_STAGES = 6;
 
 function goToStage(stage) {
   if (!visitedStages.includes(stage)) {
@@ -889,7 +907,7 @@ function goToStage(stage) {
   document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
   document.getElementById(`stage-${stage}`).classList.add('active');
 
-  for (let i = 0; i <= 4; i++) {
+  for (let i = 0; i < TOTAL_STAGES; i++) {
     const dot = document.getElementById(`dot-${i}`);
     dot.className = 'step-dot';
     if (i < stage) dot.classList.add('done');
@@ -897,16 +915,17 @@ function goToStage(stage) {
     if (visitedStages.includes(i)) dot.classList.add('clickable');
   }
 
-  document.getElementById('progressBar').style.width = (stage / 4 * 100) + '%';
+  document.getElementById('progressBar').style.width = (stage / (TOTAL_STAGES - 1) * 100) + '%';
   currentStage = stage;
 
   if (stage === 2 && !document.getElementById('extractionArea').innerHTML) runProcessing();
   if (stage === 3) renderReview();
-  if (stage === 4) { triggerConfetti(); generateQR(); }
+  if (stage === 4) mountFloorPlanner();
+  if (stage === 5) { triggerConfetti(); generateQR(); }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  for (let i = 0; i <= 4; i++) {
+  for (let i = 0; i < TOTAL_STAGES; i++) {
     const dot = document.getElementById(`dot-${i}`);
     dot.addEventListener('click', () => {
       if (visitedStages.includes(i)) {
@@ -914,12 +933,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-  // Dev hook: ?view=N (or legacy ?stage=N) jumps straight to a stage for screenshot/testing.
+  // Dev hook: ?view=N (or legacy ?stage=N) jumps directly to a stage for screenshot/testing purposes.
   const params = new URLSearchParams(location.search);
   const stageParam = params.get('view') ?? params.get('stage');
   if (stageParam !== null) {
     const n = parseInt(stageParam, 10);
-    if (!isNaN(n) && n >= 0 && n <= 4) {
+    if (!isNaN(n) && n >= 0 && n < TOTAL_STAGES) {
+      // Mark all prior stages as visited so dots/progress look coherent.
       for (let i = 0; i <= n; i++) if (!visitedStages.includes(i)) visitedStages.push(i);
       goToStage(n);
     }
@@ -1018,6 +1038,34 @@ function runProcessing() {
   }, 7500);
 }
 
+// === FLOOR PLANNER (onboarding host) ===
+let onboardingPlanner = null;
+function mountFloorPlanner() {
+  const root = document.getElementById('floorPlanner');
+  if (onboardingPlanner) return;
+  onboardingPlanner = initFloorPlanner(root, {
+    mode: 'onboarding',
+    seed: suggestedStarterLayout(),
+  });
+}
+
+// Suggested starter layout shown the first time the operator lands on stage 4.
+// Pre-seeding so they see a realistic room and tweak, rather than stare at a blank canvas.
+function suggestedStarterLayout() {
+  return [
+    { kind: 'seat', shape: 'rect', seats: 4, num: 1, x: 120, y: 80,  rotation: 0 },
+    { kind: 'seat', shape: 'rect', seats: 4, num: 2, x: 240, y: 80,  rotation: 0 },
+    { kind: 'seat', shape: 'rect', seats: 4, num: 3, x: 360, y: 80,  rotation: 0 },
+    { kind: 'seat', shape: 'rect', seats: 2, num: 4, x: 480, y: 80,  rotation: 0 },
+    { kind: 'seat', shape: 'rect', seats: 2, num: 5, x: 480, y: 200, rotation: 0 },
+    { kind: 'seat', shape: 'rect', seats: 6, num: 6, x: 120, y: 280, rotation: 0 },
+    { kind: 'seat', shape: 'rect', seats: 6, num: 7, x: 240, y: 280, rotation: 0 },
+    { kind: 'seat', shape: 'round', seats: 4, num: 8, x: 600, y: 80,  rotation: 0 },
+    { kind: 'seat', shape: 'round', seats: 2, num: 9, x: 760, y: 120, rotation: 0 },
+    { kind: 'prop', shape: 'bar',  num: null, x: 40, y: 480, rotation: 0, w: 400, h: 60 },
+  ];
+}
+
 // === REVIEW ===
 function renderReview() {
   const area = document.getElementById('reviewArea');
@@ -1107,6 +1155,8 @@ function triggerConfetti() {
 dropZone.addEventListener('click', (e) => {
   simulateUpload();
 });
+
 </script>
+<script src="assets/floor-planner.js"></script>
 </body>
 </html>

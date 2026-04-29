@@ -831,7 +831,7 @@ setInterval(updateClock, 30000);
 startTimers();
 setTimeout(addNewOrder, 3000);
 
-// Dev hook: ?view=order&id=<n> opens the order detail panel on load for screenshots/testing.
+// Dev hook: ?view=order&id=<n> opens the order detail panel on load for screenshot/testing.
 (function applyInitialView() {
   const params = new URLSearchParams(location.search);
   if (params.get('view') === 'order') {
