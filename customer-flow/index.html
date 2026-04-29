@@ -1179,6 +1179,165 @@ html, body {
 
 .payment-footer { padding: 16px 16px 32px; }
 
+/* ==================== SCREEN: SENDING (undo grace period) ==================== */
+/* Uber-style 5s window so the customer can cancel before the ticket reaches
+   the kitchen — prevents order mistakes from being acted on. */
+.sending-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 56px 24px 24px;
+  text-align: center;
+}
+
+.sending-ring {
+  position: relative;
+  width: 128px; height: 128px;
+  margin-bottom: 20px;
+}
+
+.sending-ring svg {
+  width: 100%; height: 100%;
+  transform: rotate(-90deg);
+}
+
+.sending-ring .track {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 8;
+}
+
+.sending-ring .fill {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 351.86;
+  stroke-dashoffset: 351.86;
+  transition: stroke-dashoffset linear;
+}
+
+.sending-ring.running .fill {
+  stroke-dashoffset: 0;
+}
+
+.sending-ring .icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+  color: var(--primary);
+}
+
+.sending-content h1 {
+  font-size: 22px; font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.sending-content .subtitle {
+  font-size: 14px; color: var(--text-secondary);
+  margin-bottom: 24px;
+  max-width: 320px;
+}
+
+.sending-content .countdown {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.sending-items {
+  width: 100%;
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  text-align: left;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.sending-items .ci-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 14px;
+}
+
+.sending-items .ci-row .qty { color: var(--text-secondary); }
+
+.sending-footer {
+  padding: 0 24px 32px;
+  width: 100%;
+}
+
+.sending-footer .btn-undo {
+  --undo-fill-duration: 5000ms;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  isolation: isolate;
+}
+
+.sending-footer .btn-undo::before {
+  /* Black fill that progresses left→right across the button over the grace
+     window. The text on top uses a matching background-clip gradient so each
+     letter swaps from black to white exactly as the fill front passes over
+     it — makes it unmistakable that the bar is tied to the countdown. */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--primary);
+  transform: scaleX(0);
+  transform-origin: left center;
+  z-index: 0;
+  transition: transform var(--undo-fill-duration) linear;
+}
+
+.sending-footer .btn-undo.running::before {
+  transform: scaleX(1);
+}
+
+.sending-footer .btn-undo-content {
+  position: relative;
+  z-index: 1;
+  /* Span the full button width so the gradient's coordinate system matches
+     the ::before bar's. If this were inline-flex (content-width), the seam
+     would race across a narrower span and finish before the bar reaches the
+     right edge. */
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(to right, #FFFFFF 50%, var(--primary) 50%);
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transition: background-position var(--undo-fill-duration) linear;
+}
+
+.sending-footer .btn-undo.running .btn-undo-content {
+  background-position: 0 0;
+}
+
+.sending-footer .btn-undo:active { transform: scale(0.98); }
+
 /* ==================== SCREEN: CONFIRMATION ==================== */
 .confirmation-content {
   display: flex;
@@ -1881,7 +2040,31 @@ html, body {
       </div>
 
       <div class="payment-footer">
-        <button class="btn btn-primary" id="confirmPayBtn" onclick="navigateTo('confirmation')">Confirmar pago</button>
+        <button class="btn btn-primary" id="confirmPayBtn" onclick="navigateTo('sending')">Confirmar pago</button>
+      </div>
+    </div>
+
+    <!-- ==================== SENDING (undo grace period) ==================== -->
+    <div class="screen" id="sending">
+      <div class="sending-content">
+        <div class="sending-ring" id="sendingRing">
+          <svg viewBox="0 0 120 120">
+            <circle class="track" cx="60" cy="60" r="56"></circle>
+            <circle class="fill" cx="60" cy="60" r="56"></circle>
+          </svg>
+          <div class="icon"><span class="material-symbols-rounded">restaurant</span></div>
+        </div>
+        <h1>Enviando a cocina…</h1>
+        <div class="subtitle">Tienes <span class="countdown" id="sendingCountdown">5</span> s para deshacer antes de que llegue a la cocina.</div>
+        <div class="sending-items" id="sendingItems"></div>
+      </div>
+      <div class="sending-footer">
+        <button class="btn-undo" onpointerdown="cancelSending(event)">
+          <span class="btn-undo-content">
+            <span class="material-symbols-rounded">undo</span>
+            <span>Deshacer pedido</span>
+          </span>
+        </button>
       </div>
     </div>
 
@@ -2212,6 +2395,8 @@ function navigateTo(screenId) {
 
   if (screenId === 'cart') renderCart();
   if (screenId === 'payment') renderPayment();
+  if (screenId === 'sending') startSending();
+  if (screenId !== 'sending') cancelSendingTimer();
   if (screenId === 'confirmation') { renderConfirmation(); triggerConfetti(); }
   if (screenId === 'status') renderStatus();
 }
@@ -2489,6 +2674,72 @@ function renderPayment() {
   document.getElementById('confirmPayBtn').textContent = `Confirmar pago — ${formatPrice(total)}`;
 }
 
+let sendingTimer = null;
+let sendingInterval = null;
+const SENDING_DURATION_MS = 5000;
+
+function startSending() {
+  const ring = document.getElementById('sendingRing');
+  const fill = ring.querySelector('.fill');
+  const countdownEl = document.getElementById('sendingCountdown');
+  const itemsEl = document.getElementById('sendingItems');
+
+  itemsEl.innerHTML = cart.map(item => `
+    <div class="ci-row">
+      <span>${item.name}</span>
+      <span class="qty">${item.qty}x ${formatPrice(item.unitPrice * item.qty)}</span>
+    </div>
+  `).join('');
+
+  const undoBtn = document.querySelector('.sending-footer .btn-undo');
+
+  // Reset ring and button fill so both animations restart from empty on every
+  // entry. A reflow between duration: 0 and the real duration is required, or
+  // the browser collapses both state changes into a single instant jump.
+  ring.classList.remove('running');
+  undoBtn.classList.remove('running');
+  fill.style.transition = 'none';
+  fill.style.strokeDashoffset = '351.86';
+  undoBtn.style.setProperty('--undo-fill-duration', '0ms');
+  void fill.offsetWidth;
+  void undoBtn.offsetWidth;
+  fill.style.transition = `stroke-dashoffset ${SENDING_DURATION_MS}ms linear`;
+  undoBtn.style.setProperty('--undo-fill-duration', `${SENDING_DURATION_MS}ms`);
+  ring.classList.add('running');
+  undoBtn.classList.add('running');
+
+  const start = Date.now();
+  countdownEl.textContent = Math.ceil(SENDING_DURATION_MS / 1000);
+  sendingInterval = setInterval(() => {
+    const remaining = Math.max(0, SENDING_DURATION_MS - (Date.now() - start));
+    countdownEl.textContent = Math.ceil(remaining / 1000);
+    if (remaining <= 0) clearInterval(sendingInterval);
+  }, 200);
+
+  sendingTimer = setTimeout(() => {
+    sendingTimer = null;
+    navigateTo('confirmation');
+  }, SENDING_DURATION_MS);
+}
+
+function cancelSendingTimer() {
+  if (sendingTimer) { clearTimeout(sendingTimer); sendingTimer = null; }
+  if (sendingInterval) { clearInterval(sendingInterval); sendingInterval = null; }
+  const ring = document.getElementById('sendingRing');
+  if (ring) ring.classList.remove('running');
+  const undoBtn = document.querySelector('.sending-footer .btn-undo');
+  if (undoBtn) undoBtn.classList.remove('running');
+}
+
+function cancelSending(event) {
+  if (event) event.preventDefault();
+  // Always route back to cart — even if the 5s timer happened to fire a frame
+  // before the tap registered. From the customer's point of view they pressed
+  // "undo" in time, so land them back on the cart regardless of the race.
+  cancelSendingTimer();
+  navigateTo('cart');
+}
+
 function renderConfirmation() {
   const container = document.getElementById('confirmationItems');
   container.innerHTML = cart.map(item => `
@@ -2683,7 +2934,7 @@ function applyInitialView() {
     { key: 'pulpo', qty: 1 },
     { key: 'vino-tinto', qty: 2 },
   ];
-  const needsCart = ['cart', 'payment', 'confirmation', 'status'];
+  const needsCart = ['cart', 'payment', 'sending', 'confirmation', 'status'];
   if (needsCart.includes(view) && cart.length === 0) {
     cart = SAMPLE_CART.map(entry => {
       const item = MENU_DATA[entry.key];
@@ -2701,6 +2952,7 @@ function applyInitialView() {
 
   if (view === 'cart') renderCart();
   if (view === 'payment') renderPayment();
+  if (view === 'sending') startSending();
   if (view === 'confirmation') renderConfirmation();
   if (view === 'status') renderStatus();
   updateCartFab(view);
