@@ -841,15 +841,79 @@ html, body {
 }
 
 /* ==================== SCREEN: CART ==================== */
-.cart-items { padding: 0 16px; }
+.cart-items {
+  padding: 0 16px;
+  position: relative;
+}
+
+.cart-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.cart-hint .material-symbols-rounded { font-size: 16px; }
 
 .cart-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 0;
+  gap: 10px;
+  padding: 12px 0;
   border-bottom: 1px solid var(--border-light);
+  background: var(--bg);
+  transition: transform 200ms var(--ease);
+  will-change: transform;
 }
+
+.cart-item.dragging {
+  transition: none;
+  z-index: 20;
+  position: relative;
+  border-bottom-color: transparent;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+  padding: 12px 10px;
+  margin: 0 -10px;
+}
+
+.cart-item .drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 56px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cart-item.dragging .drag-handle { cursor: grabbing; color: var(--primary); }
+.cart-item .drag-handle .material-symbols-rounded { font-size: 22px; pointer-events: none; }
+
+.cart-item .priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  width: fit-content;
+}
+
+.cart-item .priority-badge .material-symbols-rounded { font-size: 13px; }
 
 .cart-item .item-thumb {
   width: 56px; height: 56px;
@@ -1712,20 +1776,12 @@ html, body {
         <span></span>
       </div>
 
-      <div class="cart-items" id="cartItemsContainer"></div>
-
-      <div style="padding: 0 16px">
-        <div class="priority-row" id="priorityRow1" style="display:none">
-          <div class="label-group">
-            <span class="material-symbols-rounded">bolt</span>
-            <div>
-              <div class="label-text">Dar prioridad</div>
-              <div class="label-sub">Tu pedido se preparara antes</div>
-            </div>
-          </div>
-          <button class="toggle" id="priorityToggle" onclick="this.classList.toggle('on'); updatePriority()"></button>
-        </div>
+      <div class="cart-hint" id="cartHint" style="display:none">
+        <span class="material-symbols-rounded">bolt</span>
+        <span>Arrastra para reordenar — el primer plato se preparara antes</span>
       </div>
+
+      <div class="cart-items" id="cartItemsContainer"></div>
 
       <div class="tip-section">
         <h3>Propina</h3>
@@ -2252,11 +2308,14 @@ function renderCart() {
   const container = document.getElementById('cartItemsContainer');
   if (cart.length === 0) {
     container.innerHTML = '<div style="padding:40px 16px;text-align:center;color:var(--text-secondary)">Tu carrito esta vacio</div>';
-    document.getElementById('priorityRow1').style.display = 'none';
+    document.getElementById('cartHint').style.display = 'none';
   } else {
-    document.getElementById('priorityRow1').style.display = 'flex';
+    document.getElementById('cartHint').style.display = cart.length > 1 ? 'flex' : 'none';
     container.innerHTML = cart.map((item, idx) => `
-      <div class="cart-item">
+      <div class="cart-item" data-idx="${idx}">
+        <div class="drag-handle" onpointerdown="startDrag(event, ${idx})" aria-label="Reordenar">
+          <span class="material-symbols-rounded">drag_indicator</span>
+        </div>
         <img class="item-thumb" src="${item.img}" alt="">
         <div class="item-details">
           <div class="name">${item.name}</div>
@@ -2291,7 +2350,93 @@ function selectTip(btn, pct) {
   updateCartTotals();
 }
 
-function updatePriority() {}
+let dragState = null;
+
+function startDrag(e, idx) {
+  if (e.button !== undefined && e.button !== 0) return;
+  e.preventDefault();
+  e.stopPropagation();
+
+  const handle = e.currentTarget;
+  const container = document.getElementById('cartItemsContainer');
+  const items = Array.from(container.querySelectorAll('.cart-item'));
+  const el = items[idx];
+  if (!el) return;
+
+  const containerRect = container.getBoundingClientRect();
+  const metrics = items.map(it => {
+    const r = it.getBoundingClientRect();
+    return { el: it, top: r.top - containerRect.top, height: r.height };
+  });
+
+  dragState = {
+    fromIdx: idx,
+    currentIdx: idx,
+    el,
+    handle,
+    items,
+    metrics,
+    height: metrics[idx].height,
+    pointerStartY: e.clientY,
+    pointerId: e.pointerId,
+  };
+
+  el.classList.add('dragging');
+  try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+  handle.addEventListener('pointermove', onDragMove);
+  handle.addEventListener('pointerup', endDrag);
+  handle.addEventListener('pointercancel', endDrag);
+}
+
+function onDragMove(e) {
+  if (!dragState) return;
+  e.preventDefault();
+
+  const dy = e.clientY - dragState.pointerStartY;
+  dragState.el.style.transform = `translateY(${dy}px)`;
+
+  const draggedCenter = dragState.metrics[dragState.fromIdx].top + dragState.height / 2 + dy;
+
+  let targetIdx = dragState.fromIdx;
+  for (let i = 0; i < dragState.metrics.length; i++) {
+    if (i === dragState.fromIdx) continue;
+    const m = dragState.metrics[i];
+    const mid = m.top + m.height / 2;
+    if (i < dragState.fromIdx && draggedCenter < mid) { targetIdx = i; break; }
+    if (i > dragState.fromIdx && draggedCenter > mid) targetIdx = i;
+  }
+
+  if (targetIdx !== dragState.currentIdx) {
+    dragState.currentIdx = targetIdx;
+    dragState.metrics.forEach((m, i) => {
+      if (i === dragState.fromIdx) return;
+      let shift = 0;
+      if (dragState.fromIdx < targetIdx && i > dragState.fromIdx && i <= targetIdx) shift = -dragState.height;
+      else if (dragState.fromIdx > targetIdx && i >= targetIdx && i < dragState.fromIdx) shift = dragState.height;
+      m.el.style.transform = shift ? `translateY(${shift}px)` : '';
+    });
+  }
+}
+
+function endDrag(e) {
+  if (!dragState) return;
+  const { el, handle, items, fromIdx, currentIdx, pointerId } = dragState;
+
+  handle.removeEventListener('pointermove', onDragMove);
+  handle.removeEventListener('pointerup', endDrag);
+  handle.removeEventListener('pointercancel', endDrag);
+  try { handle.releasePointerCapture(pointerId); } catch (_) {}
+
+  items.forEach(it => { it.style.transform = ''; });
+  el.classList.remove('dragging');
+  dragState = null;
+
+  if (currentIdx !== fromIdx) {
+    const [moved] = cart.splice(fromIdx, 1);
+    cart.splice(currentIdx, 0, moved);
+    renderCart();
+  }
+}
 
 function updateCartTotals() {
   const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
