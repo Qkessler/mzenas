@@ -5,7 +5,7 @@
 Linvo is in the concept/proposal phase with zero design assets. We need to create end-to-end interactive Figma mock-ups for the SaaS side of the business (Pillar 1): the in-restaurant ordering experience and the restaurant operations dashboard. The goal is to have a tangible, clickable prototype that demonstrates the full customer journey and the kitchen/ops flow — useful for investor conversations, user testing, and aligning the founding team.
 
 **Design inspiration:** Honest Greens — clean, minimal, image-forward, emoji-friendly, premium but accessible.
-**Demo restaurant:** "El Canton" — Mediterranean tapas bar in Murcia (tapas, Spanish wines, seasonal plates). NO pintxos — that's Basque Country, not southern Spain.
+**Demo restaurant:** "Tu Restaurante" — Mediterranean tapas bar in Murcia (tapas, Spanish wines, seasonal plates). NO pintxos — that's Basque Country, not southern Spain.
 **Accent color:** Warm Terracotta (#E07856) on a clean white/dark base.
 
 ---
@@ -42,7 +42,7 @@ Linvo is in the concept/proposal phase with zero design assets. We need to creat
 
 | Screen | ID | Description |
 |--------|----|-------------|
-| 1. Landing | `13:2` | Full-screen hero image, "EL CANTÓN" overlay, announcement banner, "Pedir ahora" CTA, "Repetir un pedido" link |
+| 1. Landing | `13:2` | Full-screen hero image, "TU RESTAURANTE" overlay, announcement banner, "Pedir ahora" CTA, "Repetir un pedido" link |
 | 2. Menu Categories | `14:2` | NavBar, category pills (no emojis), chef picks carousel, category cards |
 | 3. Menu Items | `15:2` | Vertical cards: optional hero photo on top, CAPS+BOLD name, description, badges, prices. Mix of hero and compact cards |
 | 4. Item Detail | `17:2` | Hero image, extras checkboxes, notes input, stepper + CTA |
@@ -214,18 +214,18 @@ Create the foundational design system in Figma before any screens.
 
 ## Phase 2: Customer Mobile Web-App (8 screens)
 
-Frame size: 375x812 (iPhone standard). All screens for "El Canton".
+Frame size: 375x812 (iPhone standard). All screens for "Tu Restaurante".
 
 ### Screen 1: Restaurant Landing (post-QR scan)
 - Full-width hero image of the restaurant/terrace (bleed to top)
-- Restaurant name "El Canton" overlaid with subtle gradient
+- Restaurant name "Tu Restaurante" overlaid with subtle gradient
 - Tagline: "Tapas mediterraneas desde 2024"
 - Key info row: rating, distance/location, opening hours
 - CTA button: "Ver la carta" (See the menu)
 - Subtle Linvo branding at bottom
 
 ### Screen 2: Menu Categories
-- Top bar: "El Canton" + search icon
+- Top bar: "Tu Restaurante" + search icon
 - Horizontal scrollable category pills with emojis:
   - "Para picar" (snacks), "Ensaladas" (salads), "Tapas calientes", "Carnes y pescados", "Postres", "Bebidas"
 - Featured/hero section: "Recomendaciones del chef" with horizontal card carousel

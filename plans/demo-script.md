@@ -1,6 +1,6 @@
 # Linvo Demo Script
 
-**Demo Restaurant:** El Canton (Mediterranean tapas bar, Murcia)  
+**Demo Restaurant:** Tu Restaurante (Mediterranean tapas bar, Murcia)  
 **Prototype:** Figma file key `43G1EEZFj3TFeHFjK8jKzq`  
 **Duration:** 5-7 minutes  
 **Last Updated:** 2026-04-12
@@ -16,7 +16,7 @@
    - Desktop browser (1440x900) for restaurant operations
    - Both visible on shared screen or side-by-side
 3. **Starting screens:**
-   - Mobile: Landing page (El Canton)
+   - Mobile: Landing page (Tu Restaurante)
    - Desktop: KDS screen
 4. **Test all interactive hotspots** before presenting
 5. **Know your audience** (see variations below)
@@ -29,11 +29,11 @@
 
 **MOBILE — Landing Screen**
 
-"Imagina que eres un cliente que acaba de sentarse en El Canton. En lugar de esperar a que venga un camarero, escaneas el código QR de la mesa."
+"Imagina que eres un cliente que acaba de sentarse en Tu Restaurante. En lugar de esperar a que venga un camarero, escaneas el código QR de la mesa."
 
-[Show landing screen with hero image, "El Canton" branding, "Pedir ahora" CTA]
+[Show landing screen with hero image, "Tu Restaurante" branding, "Pedir ahora" CTA]
 
-**Talking point:** The customer sees El Canton's brand immediately — your colors, your photos, your vibe. This isn't a generic ordering app.
+**Talking point:** The customer sees Tu Restaurante's brand immediately — your colors, your photos, your vibe. This isn't a generic ordering app.
 
 [Click "Pedir ahora"]
 
@@ -275,7 +275,7 @@
 
 **Next steps:**
 - "¿Qué parte te interesa más?"
-- "¿Quieres probarlo con tu menú de El Canton?"
+- "¿Quieres probarlo con tu menú de Tu Restaurante?"
 - "Podemos hacer una prueba piloto en 2 semanas."
 
 ---

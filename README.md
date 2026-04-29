@@ -71,7 +71,7 @@ The main selling point of the restaurant onboarding flow. A restaurant owner upl
 
 ## Demo Restaurant
 
-All prototypes use **El Canton**, a fictional Mediterranean tapas bar in Murcia. The menu includes: Para picar (Patatas bravas, Croquetas de jamon, Aceitunas alinadas, Jamon iberico, Pan con tomate), Ensaladas, Tapas calientes (Pulpo a la gallega, Gambas al ajillo, Calamares a la romana), Carnes y pescados, Postres, and Bebidas.
+All prototypes use **Tu Restaurante**, a fictional Mediterranean tapas bar in Murcia. The menu includes: Para picar (Patatas bravas, Croquetas de jamon, Aceitunas alinadas, Jamon iberico, Pan con tomate), Ensaladas, Tapas calientes (Pulpo a la gallega, Gambas al ajillo, Calamares a la romana), Carnes y pescados, Postres, and Bebidas.
 
 ## How to Use
 
