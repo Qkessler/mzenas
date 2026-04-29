@@ -1168,20 +1168,20 @@ let PROPS = [];
 let floorPlanner = null;
 
 const MENU_ITEMS = [
-  { name: 'Patatas bravas', cat: 'picar', price: '7,50', img: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=100&q=60', available: true },
-  { name: 'Croquetas de jamon', cat: 'picar', price: '8,50', img: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=100&q=60', available: true },
-  { name: 'Aceitunas alinadas', cat: 'picar', price: '4,50', img: 'https://images.unsplash.com/photo-1612879988258-0d819c297621?w=100&q=60', available: true },
-  { name: 'Jamon iberico', cat: 'picar', price: '16,00', img: 'https://images.unsplash.com/photo-1600891964092-4316c288032e?w=100&q=60', available: true },
-  { name: 'Pan con tomate', cat: 'picar', price: '4,00', img: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?w=100&q=60', available: true },
-  { name: 'Ensalada mixta', cat: 'ensaladas', price: '9,00', img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=100&q=60', available: true },
-  { name: 'Ensalada cesar', cat: 'ensaladas', price: '11,00', img: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=100&q=60', available: true },
-  { name: 'Pulpo a la gallega', cat: 'tapas', price: '14,00', img: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=100&q=60', available: true },
-  { name: 'Gambas al ajillo', cat: 'tapas', price: '12,50', img: 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=100&q=60', available: true },
-  { name: 'Calamares a la romana', cat: 'tapas', price: '10,00', img: 'https://images.unsplash.com/photo-1604909052743-94e838986d24?w=100&q=60', available: true },
-  { name: 'Chuleton de ternera', cat: 'carnes', price: '22,00', img: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=100&q=60', available: true },
-  { name: 'Solomillo iberico', cat: 'carnes', price: '19,00', img: 'https://images.unsplash.com/photo-1558030006-450675393462?w=100&q=60', available: true },
-  { name: 'Tarta de queso', cat: 'postres', price: '6,50', img: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=100&q=60', available: true },
-  { name: 'Crema catalana', cat: 'postres', price: '5,50', img: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=100&q=60', available: true },
+  { name: 'Patatas bravas', cat: 'picar', price: '7,50', img: 'https://images.unsplash.com/photo-1565599837634-134bc3aadce8?w=100&q=60', available: true },
+  { name: 'Croquetas de jamon', cat: 'picar', price: '8,50', img: 'https://images.unsplash.com/photo-1713517915303-ae3b3429f939?w=100&q=60', available: true },
+  { name: 'Aceitunas alinadas', cat: 'picar', price: '4,50', img: 'https://plus.unsplash.com/premium_photo-1770645900585-06b26581f95c?w=100&q=60', available: true },
+  { name: 'Jamon iberico', cat: 'picar', price: '16,00', img: 'https://images.unsplash.com/photo-1732565432358-a8c95bc24ea3?w=100&q=60', available: true },
+  { name: 'Pan con tomate', cat: 'picar', price: '4,00', img: 'https://images.unsplash.com/photo-1744970531106-28cfe0c10c1f?w=100&q=60', available: true },
+  { name: 'Ensalada mixta', cat: 'ensaladas', price: '9,00', img: 'https://images.unsplash.com/photo-1710432104535-38c7da06ca6d?w=100&q=60', available: true },
+  { name: 'Ensalada cesar', cat: 'ensaladas', price: '11,00', img: 'https://images.unsplash.com/photo-1746211108786-ca20c8f80ecd?w=100&q=60', available: true },
+  { name: 'Pulpo a la gallega', cat: 'tapas', price: '14,00', img: 'https://plus.unsplash.com/premium_photo-1669261883116-877e829d53a0?w=100&q=60', available: true },
+  { name: 'Gambas al ajillo', cat: 'tapas', price: '12,50', img: 'https://plus.unsplash.com/premium_photo-1707161782700-b6110d6de469?w=100&q=60', available: true },
+  { name: 'Calamares a la romana', cat: 'tapas', price: '10,00', img: 'https://images.unsplash.com/photo-1675377668870-baf9b35763f9?w=100&q=60', available: true },
+  { name: 'Chuleton de ternera', cat: 'carnes', price: '22,00', img: 'https://plus.unsplash.com/premium_photo-1723291298538-cf9d7d8672b7?w=100&q=60', available: true },
+  { name: 'Solomillo iberico', cat: 'carnes', price: '19,00', img: 'https://images.unsplash.com/photo-1609499723708-b61f436deeb6?w=100&q=60', available: true },
+  { name: 'Tarta de queso', cat: 'postres', price: '6,50', img: 'https://images.unsplash.com/photo-1756550641128-ced5a4cf3e90?w=100&q=60', available: true },
+  { name: 'Crema catalana', cat: 'postres', price: '5,50', img: 'https://images.unsplash.com/photo-1679710159090-3ed8f8a4886c?w=100&q=60', available: true },
 ];
 
 let currentMenuCat = 'all';
