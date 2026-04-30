@@ -1149,6 +1149,66 @@ html, body {
   color: var(--text-secondary);
 }
 
+.bill-section {
+  margin: 16px;
+  padding: 16px;
+  background: var(--surface);
+  border-radius: 12px;
+}
+
+.bill-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+
+.bill-section-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.bill-section-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.bill-items .bill-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.bill-items .bill-row:last-child { border-bottom: none; }
+
+.bill-items .bill-row .bill-name {
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.bill-items .bill-row .bill-qty {
+  color: var(--text-secondary);
+  margin-right: 8px;
+}
+
+.bill-items .bill-row .bill-price {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.bill-empty {
+  padding: 8px 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
 .payment-summary {
   margin: 0 16px;
   padding: 16px;
@@ -2028,6 +2088,14 @@ html, body {
         <span></span>
       </div>
 
+      <div class="bill-section">
+        <div class="bill-section-header">
+          <h3>Tu cuenta</h3>
+          <span class="bill-section-hint">Revisa que todo este correcto</span>
+        </div>
+        <div class="bill-items" id="billItems"></div>
+      </div>
+
       <div class="tip-section">
         <h3>Propina</h3>
         <div class="tip-options">
@@ -2775,6 +2843,20 @@ function renderPayment() {
   const subtotal = cart.reduce((s, i) => s + i.unitPrice * i.qty, 0);
   const tip = subtotal * tipPercent / 100;
   const total = subtotal + tip;
+
+  const billContainer = document.getElementById('billItems');
+  if (billContainer) {
+    if (!cart.length) {
+      billContainer.innerHTML = '<div class="bill-empty">No hay platos en la cuenta.</div>';
+    } else {
+      billContainer.innerHTML = cart.map(item => `
+        <div class="bill-row">
+          <span class="bill-name"><span class="bill-qty">${item.qty}x</span>${item.name}</span>
+          <span class="bill-price">${formatPrice(item.unitPrice * item.qty)}</span>
+        </div>
+      `).join('');
+    }
+  }
 
   document.getElementById('paySubtotal').textContent = formatPrice(subtotal);
   document.getElementById('payTip').textContent = formatPrice(tip);
