@@ -1,6 +1,6 @@
 # Mzenas
 
-Mzenas is an operating system for urban dining. It connects restaurants with customers through a single platform that handles the entire journey from scanning a QR code to settling the bill!
+Mzenas is an operating system for urban dining. It connects restaurants with customers through a single platform that handles the entire journey from scanning a QR code to settling the bill.
 
 Restaurants get an AI-powered operations platform that eliminates friction from ordering through payment. Customers get a frictionless digital menu on their phone, with no app to download. The system reduces staffing requirements, increases table turnover by 15-20%, and gives restaurant owners real-time operational intelligence.
 
