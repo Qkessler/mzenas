@@ -145,7 +145,9 @@ html, body {
 .screen { scroll-behavior: smooth; }
 
 .section-header[id] {
-  scroll-margin-top: 120px;
+  /* Offset anchor jumps by top-bar (~84px) + sticky category-pills (~56px) so the
+     section title isn't hidden behind them. */
+  scroll-margin-top: 148px;
 }
 
 /* Top Bar */
@@ -158,6 +160,9 @@ html, body {
   padding: 40px 16px 12px;
   background: var(--bg);
   border-bottom: 1px solid var(--border-light);
+  /* Subtle drop shadow so the sticky category-pills row underneath reads as a
+     separate surface instead of looking glued to the top bar. */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   min-height: 56px;
 }
 
@@ -532,6 +537,15 @@ html, body {
   padding: 12px 16px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  /* Stick right under the .top-bar (which is also position: sticky; top: 0) so the
+     category switcher stays reachable while the user scrolls the long item list.
+     top matches the top-bar's rendered height (40px top pad + ~32px content + 12px
+     bottom pad ≈ 84px) so the top-bar doesn't overlap and clip this row's top padding. */
+  position: sticky;
+  top: 84px;
+  z-index: 9;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .category-pills::-webkit-scrollbar { display: none; }
