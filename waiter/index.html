@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" href="/assets/mzenas-favicon.png?v=4">
+<link rel="shortcut icon" href="/favicon.ico?v=4">
+<link rel="apple-touch-icon" href="/assets/mzenas-app-icon.png?v=4">
+<meta name="theme-color" content="#C0392B">
+<title>Mzenas — Camarero · Tu Restaurante</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+@font-face {
+  font-family: 'Material Symbols Rounded';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(/assets/material-symbols-rounded.woff2) format('woff2');
+}
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded';
+  font-weight: normal; font-style: normal;
+  font-size: 22px; line-height: 1;
+  display: inline-block; white-space: nowrap;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'liga';
+}
+
+:root {
+  --primary: #1A1A1A;
+  --accent: #C0392B;
+  --accent-light: #F5D0C3;
+  --bg: #FFFFFF;
+  --surface: #F8F6F3;
+  --surface-2: #F0ECE8;
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B6B6B;
+  --text-muted: #9A9A9A;
+  --success: #2E7D32;
+  --success-light: #E6F4EA;
+  --warning: #C77700;
+  --warning-light: #FFF4DF;
+  --error: #C0392B;
+  --error-light: #FBE7E3;
+  --info: #1565C0;
+  --info-light: #E3F0FB;
+  --border: #E8E4DF;
+  --border-light: #F0ECE8;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration: 300ms;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.14);
+}
+
+html, body {
+  font-family: var(--font);
+  background: #F0F0F0;
+  color: var(--text-primary);
+  height: 100%; overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Phone-first frame: lifted verbatim from customer-flow.html so the waiter
+   view renders inside the same iPhone shell on desktop demos and fills the
+   viewport on real devices. */
+.device-frame {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 375px; height: 812px;
+  background: var(--bg);
+  border-radius: 40px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.device-frame::before {
+  content: ''; position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 150px; height: 30px;
+  background: var(--primary);
+  border-radius: 0 0 20px 20px;
+  z-index: 1000;
+}
+@media (max-width: 500px) {
+  html, body { background: var(--bg); }
+  .device-frame {
+    top: 0; left: 0;
+    transform: none;
+    width: 100%; height: 100%;
+    border-radius: 0; box-shadow: none;
+  }
+  .device-frame::before { display: none; }
+}
+
+/* =============== TOP BAR =============== */
+.top-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 44px 16px 10px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+.top-bar .mz { display: flex; align-items: center; gap: 8px; }
+.top-bar .mz img { width: 28px; height: 28px; display: block; }
+.top-bar .waiter {
+  display: flex; flex-direction: column;
+  line-height: 1.1; flex: 1;
+}
+.top-bar .waiter-name { font-size: 14px; font-weight: 600; }
+.top-bar .waiter-shift { font-size: 11px; color: var(--text-secondary); }
+.top-bar .clock {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px; font-weight: 600;
+  color: var(--text-secondary);
+  padding: 6px 10px; background: var(--surface);
+  border-radius: 20px;
+}
+.top-bar .bell {
+  position: relative;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface); border: none;
+  border-radius: 50%; cursor: pointer;
+  color: var(--text-primary);
+  transition: background var(--duration) var(--ease);
+}
+.top-bar .bell:active { background: var(--surface-2); }
+.top-bar .bell .badge {
+  position: absolute;
+  top: -2px; right: -2px;
+  min-width: 18px; height: 18px;
+  padding: 0 5px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 9px;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--bg);
+}
+.top-bar .bell.has-alerts .material-symbols-rounded {
+  animation: bell-shake 1.4s var(--ease) infinite;
+}
+@keyframes bell-shake {
+  0%, 60%, 100% { transform: rotate(0); }
+  65% { transform: rotate(-12deg); }
+  75% { transform: rotate(10deg); }
+  85% { transform: rotate(-6deg); }
+  92% { transform: rotate(4deg); }
+}
+
+/* =============== FILTER CHIPS =============== */
+.chips {
+  display: flex; gap: 8px;
+  padding: 10px 16px;
+  overflow-x: auto;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+  scrollbar-width: none;
+}
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  background: var(--surface);
+  border: 1px solid transparent;
+  border-radius: 20px;
+  font: inherit;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--duration) var(--ease);
+}
+.chip.active {
+  background: var(--primary);
+  color: #fff;
+}
+.chip .chip-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px;
+  padding: 0 5px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 9px;
+  font-size: 11px; font-weight: 700;
+}
+.chip.active .chip-count { background: #fff; color: var(--primary); }
+.chip.urgent:not(.active) {
+  background: var(--error-light);
+  color: var(--error);
+}
+.chip.urgent:not(.active) .chip-count { background: var(--error); }
+.chip.pulsing:not(.active) { animation: chip-pulse 1.6s var(--ease) infinite; }
+@keyframes chip-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.35); }
+  50%      { box-shadow: 0 0 0 6px rgba(192, 57, 43, 0);    }
+}
+
+/* =============== TABLE LIST =============== */
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 12px 96px;
+  background: #FAFAFA;
+  scrollbar-width: none;
+}
+.list::-webkit-scrollbar { display: none; }
+.list-empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.tcard-wrap {
+  position: relative;
+  margin-bottom: 10px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+/* Swipe reveal action. The card slides over these so the waiter sees the
+   action underneath once they drag; implemented as two layers rather than
+   real drag-to-delete because this is a demo and tapping is just as fast. */
+.tcard-actions {
+  position: absolute; inset: 0;
+  display: flex; justify-content: flex-end;
+  align-items: stretch;
+}
+.tcard-actions.left { justify-content: flex-start; }
+.swipe-action {
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 24px;
+  font-size: 13px; font-weight: 600;
+  color: #fff;
+  gap: 6px;
+}
+.swipe-action.serve { background: var(--success); }
+.swipe-action.kitchen { background: var(--info); }
+
+.tcard {
+  position: relative;
+  background: var(--bg);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: transform var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+  touch-action: pan-y;
+}
+.tcard:active { box-shadow: var(--shadow-md); }
+.tcard.swiping { transition: none; }
+.tcard.urgent {
+  border-color: var(--error);
+  box-shadow: 0 0 0 1px var(--error);
+}
+.tcard.ready {
+  border-color: var(--success);
+  box-shadow: 0 0 0 1px var(--success);
+}
+.tcard.calls .call-badge { animation: chip-pulse 1.6s var(--ease) infinite; }
+
+.tcard-head {
+  display: flex; align-items: center; gap: 10px;
+}
+.tcard-num {
+  font-size: 18px; font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.tcard-meta {
+  font-size: 12px; color: var(--text-secondary);
+  flex: 1;
+}
+.tcard-total {
+  font-size: 15px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.tcard-total.muted { color: var(--text-muted); font-weight: 500; }
+
+.tcard-state {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+}
+.state-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+}
+.state-nueva      { background: var(--info-light);    color: var(--info); }
+.state-en-cocina  { background: var(--warning-light); color: var(--warning); }
+.state-lista      { background: var(--success-light); color: var(--success); }
+.state-servida    { background: var(--surface-2);     color: var(--text-secondary); }
+.state-pide-cuenta{ background: var(--accent-light);  color: var(--accent); }
+.state-pagada     { background: var(--surface-2);     color: var(--text-secondary); }
+.state-libre      { background: var(--success-light); color: var(--success); }
+.state-reservada  { background: var(--surface-2);     color: var(--text-secondary); }
+
+.tcard-flags {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-top: 8px;
+}
+.flag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px; font-weight: 600;
+}
+.flag .material-symbols-rounded { font-size: 14px; }
+.flag.call     { background: var(--error-light);   color: var(--error); }
+.flag.priority { background: var(--warning-light); color: var(--warning); }
+.flag.bill     { background: var(--accent-light);  color: var(--accent); }
+.flag.ready    { background: var(--success-light); color: var(--success); }
+
+.tcard-cta {
+  margin-top: 10px;
+  display: flex; justify-content: flex-end;
+}
+.btn-primary-sm, .btn-secondary-sm {
+  padding: 7px 14px;
+  border: none; border-radius: 8px;
+  font: inherit;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: background var(--duration) var(--ease);
+}
+.btn-primary-sm { background: var(--primary); color: #fff; }
+.btn-primary-sm.accent { background: var(--accent); }
+.btn-primary-sm.success { background: var(--success); }
+.btn-secondary-sm {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+/* =============== BOTTOM SHEET =============== */
+.sheet-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration) var(--ease);
+  z-index: 20;
+}
+.sheet-backdrop.show { opacity: 1; pointer-events: auto; }
+
+.sheet {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(100%);
+  transition: transform var(--duration) var(--ease);
+  z-index: 21;
+  display: flex; flex-direction: column;
+  max-height: 94%;
+}
+.sheet.show { transform: translateY(0); }
+.sheet-handle {
+  width: 40px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 10px auto 4px;
+  flex-shrink: 0;
+}
+.sheet-head {
+  padding: 8px 16px 12px;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+.sheet-head h2 {
+  font-size: 18px; font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.sheet-head .sub {
+  font-size: 12px; color: var(--text-secondary);
+  margin-top: 2px;
+}
+.sheet-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+.sheet-tab {
+  flex: 1;
+  padding: 12px 8px;
+  background: none; border: none;
+  font: inherit;
+  font-size: 13px; font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all var(--duration) var(--ease);
+}
+.sheet-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+.sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px 24px;
+}
+.sheet-body::-webkit-scrollbar { display: none; }
+
+.course-group { margin-bottom: 18px; }
+.course-title {
+  font-size: 12px; font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.item-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+.item-row:last-child { border-bottom: none; }
+.item-row.cancelled .item-name,
+.item-row.cancelled .item-extras { text-decoration: line-through; color: var(--text-muted); }
+
+.item-check {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg);
+  cursor: pointer;
+  transition: all var(--duration) var(--ease);
+}
+.item-check.on {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+.item-check.on .material-symbols-rounded { font-size: 16px; }
+.item-check .material-symbols-rounded { display: none; }
+.item-check.on .material-symbols-rounded { display: inline-block; }
+.item-check.disabled { opacity: 0.4; cursor: not-allowed; }
+
+.item-body { flex: 1; min-width: 0; }
+.item-name { font-size: 14px; font-weight: 600; }
+.item-qty { color: var(--text-secondary); font-weight: 500; margin-right: 4px; }
+.item-extras, .item-notes {
+  font-size: 12px; color: var(--text-secondary);
+  margin-top: 2px;
+}
+.item-notes { font-style: italic; }
+.item-state-pill {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.item-state-pill.nueva     { background: var(--info-light);    color: var(--info); }
+.item-state-pill.en-cocina { background: var(--warning-light); color: var(--warning); }
+.item-state-pill.lista     { background: var(--success-light); color: var(--success); }
+.item-state-pill.servida   { background: var(--surface-2);     color: var(--text-secondary); }
+.item-state-pill.anulada   { background: var(--error-light);   color: var(--error); }
+
+.item-price {
+  font-size: 13px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+.item-trash {
+  background: none; border: none;
+  color: var(--text-muted); cursor: pointer;
+  padding: 2px;
+}
+.item-trash:active { color: var(--error); }
+
+.add-course-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px; font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: background var(--duration) var(--ease);
+}
+.add-course-btn:active { background: var(--surface-2); }
+
+.serve-all-bar {
+  position: sticky; bottom: 0;
+  margin: 12px -16px -24px;
+  padding: 12px 16px;
+  background: linear-gradient(to top, var(--bg) 70%, rgba(255,255,255,0));
+}
+.serve-all-bar .btn-primary-sm { width: 100%; padding: 12px; font-size: 14px; }
+
+/* Actions tab */
+.action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.action-btn {
+  padding: 16px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  font: inherit;
+  font-size: 13px; font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  text-align: center;
+  transition: all var(--duration) var(--ease);
+}
+.action-btn:active { background: var(--surface-2); }
+.action-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.action-btn.accent  { background: var(--accent);  color: #fff; border-color: var(--accent); }
+.action-btn.success { background: var(--success); color: #fff; border-color: var(--success); }
+.action-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+.action-btn .material-symbols-rounded { font-size: 24px; }
+
+/* Cuenta tab */
+.bill-row {
+  display: flex; justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13px;
+}
+.bill-row.total {
+  font-size: 16px; font-weight: 700;
+  border-top: 1px solid var(--border);
+  margin-top: 8px; padding-top: 10px;
+}
+.tip-row {
+  display: flex; gap: 8px;
+  margin: 10px 0;
+}
+.tip-btn {
+  flex: 1;
+  padding: 8px;
+  background: var(--surface); border: 1px solid var(--border-light);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: all var(--duration) var(--ease);
+}
+.tip-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* =============== NOTIFICATIONS SHEET (right side) =============== */
+.side-sheet {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 88%;
+  background: var(--bg);
+  box-shadow: var(--shadow-lg);
+  transform: translateX(100%);
+  transition: transform var(--duration) var(--ease);
+  z-index: 21;
+  display: flex; flex-direction: column;
+}
+.side-sheet.show { transform: translateX(0); }
+.side-sheet-head {
+  padding: 44px 16px 12px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 10px;
+}
+.side-sheet-head h2 {
+  flex: 1;
+  font-size: 17px; font-weight: 700;
+}
+.icon-btn {
+  background: none; border: none;
+  cursor: pointer;
+  color: var(--text-primary);
+  padding: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.ping {
+  display: flex; gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-light);
+  transition: background var(--duration) var(--ease);
+}
+.ping.ack { opacity: 0.5; }
+.ping-icon {
+  flex-shrink: 0;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--error-light); color: var(--error);
+}
+.ping-icon.bill { background: var(--accent-light); color: var(--accent); }
+.ping-icon.need { background: var(--warning-light); color: var(--warning); }
+.ping-body { flex: 1; min-width: 0; }
+.ping-title { font-size: 14px; font-weight: 600; }
+.ping-reason { font-size: 12px; color: var(--text-secondary); }
+.ping-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.ping-actions { display: flex; gap: 6px; margin-top: 8px; }
+.ping-actions button {
+  padding: 5px 10px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.ping-actions .go { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* =============== ADD-ITEM PICKER =============== */
+.picker {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  max-height: 78%;
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(100%);
+  transition: transform var(--duration) var(--ease);
+  z-index: 23;
+  display: flex; flex-direction: column;
+}
+.picker.show { transform: translateY(0); }
+.picker-head {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 10px;
+}
+.picker-head h3 { font-size: 16px; font-weight: 700; flex: 1; }
+.picker-cats {
+  display: flex; gap: 6px;
+  padding: 10px 16px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border-light);
+  scrollbar-width: none;
+}
+.picker-cats::-webkit-scrollbar { display: none; }
+.picker-cats .chip { padding: 5px 12px; font-size: 12px; }
+.picker-list {
+  flex: 1; overflow-y: auto;
+  padding: 8px 16px 24px;
+}
+.picker-list::-webkit-scrollbar { display: none; }
+.picker-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-light);
+  cursor: pointer;
+}
+.picker-item .pn { flex: 1; font-size: 14px; font-weight: 600; }
+.picker-item .pp { font-size: 13px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.picker-item:active { background: var(--surface); }
+
+/* =============== TOAST =============== */
+.toast-stack {
+  position: absolute;
+  left: 16px; right: 16px; bottom: 16px;
+  z-index: 40;
+  display: flex; flex-direction: column; gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--primary);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px; font-weight: 500;
+  box-shadow: var(--shadow-md);
+  display: flex; align-items: center; gap: 8px;
+  animation: toast-in 280ms var(--ease);
+}
+.toast.call { background: var(--accent); }
+.toast.success { background: var(--success); }
+@keyframes toast-in {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.toast.fade-out { animation: toast-out 240ms var(--ease) forwards; }
+@keyframes toast-out {
+  to { transform: translateY(20px); opacity: 0; }
+}
+
+/* =============== MODAL (payment / transfer / note) =============== */
+.modal-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.5);
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--duration) var(--ease);
+  z-index: 30;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-backdrop.show { opacity: 1; pointer-events: auto; }
+.modal {
+  background: var(--bg);
+  border-radius: 16px;
+  padding: 18px;
+  width: 100%;
+  max-width: 340px;
+  transform: scale(0.92);
+  transition: transform var(--duration) var(--ease);
+  box-shadow: var(--shadow-lg);
+}
+.modal-backdrop.show .modal { transform: scale(1); }
+.modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+.modal .row { margin: 10px 0; }
+.modal label { font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px; }
+.modal input, .modal textarea, .modal select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  background: var(--bg);
+}
+.modal textarea { min-height: 80px; resize: vertical; }
+.modal-actions {
+  display: flex; gap: 8px;
+  margin-top: 14px;
+}
+.modal-actions button {
+  flex: 1;
+  padding: 10px;
+  border: none; border-radius: 8px;
+  font: inherit;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+}
+.modal-actions .cancel { background: var(--surface); color: var(--text-primary); }
+.modal-actions .confirm { background: var(--primary); color: #fff; }
+.modal-actions .confirm.accent { background: var(--accent); }
+.pay-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pay-method {
+  padding: 12px 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  font: inherit;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.pay-method.selected { border-color: var(--primary); background: var(--surface); }
+
+</style>
+</head>
+<body>
+
+<div class="device-frame">
+
+  <!-- ========== TOP BAR ========== -->
+  <header class="top-bar">
+    <span class="mz"><img src="/assets/mzenas-favicon.png" alt=""></span>
+    <div class="waiter">
+      <span class="waiter-name">Laura M.</span>
+      <span class="waiter-shift">Turno tarde · Sala</span>
+    </div>
+    <span class="clock" id="clock">--:--</span>
+    <button class="bell" id="bellBtn" onclick="openNotifications()" aria-label="Avisos">
+      <span class="material-symbols-rounded">notifications</span>
+      <span class="badge" id="bellBadge" style="display:none">0</span>
+    </button>
+  </header>
+
+  <!-- ========== FILTER CHIPS ========== -->
+  <nav class="chips" id="chips">
+    <!-- populated by JS so counts stay in sync with state -->
+  </nav>
+
+  <!-- ========== TABLE LIST ========== -->
+  <main class="list" id="tableList"></main>
+
+  <!-- ========== BOTTOM SHEET (table detail) ========== -->
+  <div class="sheet-backdrop" id="sheetBackdrop" onclick="closeSheet()"></div>
+  <section class="sheet" id="sheet" aria-hidden="true">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2 id="sheetTitle">Mesa</h2>
+      <div class="sub" id="sheetSub"></div>
+    </div>
+    <div class="sheet-tabs">
+      <button class="sheet-tab active" data-tab="order"   onclick="switchTab('order')">Pedido</button>
+      <button class="sheet-tab"        data-tab="actions" onclick="switchTab('actions')">Acciones</button>
+      <button class="sheet-tab"        data-tab="bill"    onclick="switchTab('bill')">Cuenta</button>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </section>
+
+  <!-- ========== NOTIFICATIONS (call-waiter feed) ========== -->
+  <div class="sheet-backdrop" id="notifBackdrop" onclick="closeNotifications()"></div>
+  <aside class="side-sheet" id="notifSheet">
+    <div class="side-sheet-head">
+      <button class="icon-btn" onclick="closeNotifications()" aria-label="Cerrar">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+      <h2>Avisos</h2>
+    </div>
+    <div class="sheet-body" id="notifList" style="padding:0"></div>
+  </aside>
+
+  <!-- ========== ADD-ITEM PICKER ========== -->
+  <div class="sheet-backdrop" id="pickerBackdrop" onclick="closePicker()"></div>
+  <section class="picker" id="picker">
+    <div class="picker-head">
+      <h3>Añadir al pedido</h3>
+      <button class="icon-btn" onclick="closePicker()" aria-label="Cerrar">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </div>
+    <div class="picker-cats" id="pickerCats"></div>
+    <div class="picker-list" id="pickerList"></div>
+  </section>
+
+  <!-- ========== MODALS ========== -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" id="modalBox"><!-- filled per-use --></div>
+  </div>
+
+  <!-- ========== TOASTS ========== -->
+  <div class="toast-stack" id="toasts"></div>
+
+</div>
+
+<script>
+/* ============================================================
+   DATA MODEL
+   Seed data is aligned with restaurant-operations (table numbers,
+   statuses) and restaurant-kitchen (Mesa 3 late, Mesa 5 ready, Mesa 7
+   new). A demo can cut between all three prototypes and tell one
+   coherent story.
+   ============================================================ */
+
+const MENU_DATA = {
+  bravas:       { name: 'Patatas bravas',     price: 7.50,  cat: 'para-picar' },
+  croquetas:    { name: 'Croquetas de jamon', price: 8.50,  cat: 'para-picar' },
+  aceitunas:    { name: 'Aceitunas alinadas', price: 4.50,  cat: 'para-picar' },
+  jamon:        { name: 'Jamon iberico',      price: 16.00, cat: 'para-picar' },
+  pan:          { name: 'Pan con tomate',     price: 4.00,  cat: 'para-picar' },
+  ensaladilla:  { name: 'Ensaladilla rusa',   price: 7.50,  cat: 'ensaladas' },
+  cesar:        { name: 'Ensalada Cesar',     price: 9.50,  cat: 'ensaladas' },
+  pulpo:        { name: 'Pulpo a la gallega', price: 14.00, cat: 'tapas-calientes' },
+  gambas:       { name: 'Gambas al ajillo',   price: 12.50, cat: 'tapas-calientes' },
+  calamares:    { name: 'Calamares romana',   price: 10.00, cat: 'tapas-calientes' },
+  tortilla:     { name: 'Tortilla española',  price: 8.00,  cat: 'tapas-calientes' },
+  gazpacho:     { name: 'Gazpacho andaluz',   price: 6.00,  cat: 'tapas-calientes' },
+  solomillo:    { name: 'Solomillo ternera',  price: 18.00, cat: 'principales' },
+  lubina:       { name: 'Lubina a la sal',    price: 16.50, cat: 'principales' },
+  'tarta-queso':{ name: 'Tarta de queso',     price: 6.50,  cat: 'postres' },
+  flan:         { name: 'Flan casero',        price: 5.00,  cat: 'postres' },
+  cerveza:      { name: 'Cerveza artesana',   price: 3.50,  cat: 'bebidas' },
+  'vino-tinto': { name: 'Vino tinto',         price: 4.00,  cat: 'bebidas' },
+  agua:         { name: 'Agua mineral',       price: 2.00,  cat: 'bebidas' },
+};
+
+const CATEGORIES = [
+  { id: 'para-picar',       name: 'Para picar' },
+  { id: 'ensaladas',        name: 'Ensaladas' },
+  { id: 'tapas-calientes',  name: 'Tapas calientes' },
+  { id: 'principales',      name: 'Principales' },
+  { id: 'postres',          name: 'Postres' },
+  { id: 'bebidas',          name: 'Bebidas' },
+];
+
+/* Item state lifecycle mirrors the KDS so this view feels like the same
+   system: nueva → en-cocina → lista → servida. 'anulada' is a side path. */
+const now = Date.now();
+const MIN = 60 * 1000;
+
+let nextItemId = 1000;
+function mkItem(key, qty, state, minsAgo, extras, notes) {
+  const m = MENU_DATA[key];
+  return {
+    id: ++nextItemId,
+    key, name: m.name, price: m.price, cat: m.cat,
+    qty: qty || 1,
+    state: state || 'nueva',
+    sentAt: now - (minsAgo || 0) * MIN,
+    extras: extras || [],
+    notes: notes || '',
+  };
+}
+
+let TABLES = [
+  {
+    num: 1, zone: 'Sala', seats: 4, status: 'occupied',
+    seatedAt: now - 42 * MIN,
+    calls: [], priority: false, billRequested: false,
+    order: { items: [
+      mkItem('gazpacho', 2, 'servida', 30),
+      mkItem('tortilla', 1, 'servida', 28),
+      mkItem('jamon',    1, 'servida', 25),
+      mkItem('vino-tinto', 2, 'servida', 30),
+    ]}
+  },
+  {
+    num: 2, zone: 'Sala', seats: 4, status: 'occupied',
+    seatedAt: now - 28 * MIN,
+    calls: [], priority: false, billRequested: false,
+    order: { items: [
+      mkItem('croquetas',   1, 'servida', 18),
+      mkItem('bravas',      1, 'servida', 18),
+      mkItem('cesar',       1, 'en-cocina', 8),
+      mkItem('cerveza',     2, 'servida', 18),
+    ]}
+  },
+  {
+    num: 3, zone: 'Sala', seats: 2, status: 'occupied',
+    seatedAt: now - 35 * MIN,
+    /* Mesa 3 is 'late' in the KDS — this waiter view surfaces it as
+       priority + active call so the chip pulses and the card sits first. */
+    calls: [{ reason: 'Llama camarero', at: now - 2 * MIN }],
+    priority: true, billRequested: false,
+    order: { items: [
+      mkItem('croquetas', 1, 'servida',   28),
+      mkItem('bravas',    1, 'servida',   28),
+      mkItem('calamares', 1, 'en-cocina', 20, [], 'Sin limón'),
+      mkItem('agua',      1, 'servida',   28),
+    ]}
+  },
+  {
+    num: 4, zone: 'Terraza', seats: 2, status: 'reserved',
+    seatedAt: null,
+    reservation: { name: 'García', time: '14:00', guests: 2 },
+    calls: [], priority: false, billRequested: false,
+    order: { items: [] }
+  },
+  {
+    num: 5, zone: 'Sala', seats: 6, status: 'occupied',
+    seatedAt: now - 32 * MIN,
+    /* Mesa 5 in KDS is state 'ready' — items arrive ready to serve. */
+    calls: [], priority: false, billRequested: false,
+    order: { items: [
+      mkItem('pulpo',    2, 'lista',   10),
+      mkItem('gambas',   2, 'lista',   10),
+      mkItem('pan',      2, 'servida', 30),
+      mkItem('vino-tinto', 4, 'servida', 30),
+    ]}
+  },
+  {
+    num: 6, zone: 'Terraza', seats: 4, status: 'occupied',
+    seatedAt: now - 12 * MIN,
+    calls: [], priority: false, billRequested: true,
+    order: { items: [
+      mkItem('bravas',    1, 'servida', 8),
+      mkItem('croquetas', 1, 'servida', 8),
+      mkItem('pulpo',     1, 'servida', 8),
+      mkItem('cerveza',   3, 'servida', 8),
+    ]}
+  },
+  {
+    num: 7, zone: 'Sala', seats: 2, status: 'occupied',
+    seatedAt: now - 9 * MIN,
+    /* Mesa 7 in KDS is brand-new (status 'new'). */
+    calls: [], priority: false, billRequested: false,
+    order: { items: [
+      mkItem('aceitunas',  1, 'nueva', 2),
+      mkItem('pan',        1, 'nueva', 2),
+      mkItem('solomillo',  1, 'nueva', 2, [{ name: 'Salsa pimienta', price: 2.00 }]),
+      mkItem('agua',       1, 'nueva', 2),
+    ]}
+  },
+  {
+    num: 8, zone: 'Terraza', seats: 4, status: 'free',
+    seatedAt: null,
+    calls: [], priority: false, billRequested: false,
+    order: { items: [] }
+  },
+];
+
+let currentTableNum = null;
+let currentTab = 'order';
+let currentFilter = 'all';
+let tipPercent = 0;
+
+/* ============================================================
+   TIME & FORMAT HELPERS
+   ============================================================ */
+function fmtEur(n) { return n.toFixed(2).replace('.', ',') + ' €'; }
+function elapsedMin(ts) { return Math.max(0, Math.floor((Date.now() - ts) / MIN)); }
+function fmtElapsed(ts) {
+  if (!ts) return '';
+  const m = elapsedMin(ts);
+  if (m < 60) return m + ' min';
+  const h = Math.floor(m / 60), mm = m % 60;
+  return h + 'h ' + (mm ? mm + 'm' : '');
+}
+function tableTotal(t) {
+  return t.order.items
+    .filter(i => i.state !== 'anulada')
+    .reduce((s, i) => s + i.qty * (i.price + i.extras.reduce((e, x) => e + x.price, 0)), 0);
+}
+function tableCourseCount(t) {
+  const live = t.order.items.filter(i => i.state !== 'anulada');
+  const dishes = live.filter(i => i.cat !== 'bebidas').reduce((s, i) => s + i.qty, 0);
+  const drinks = live.filter(i => i.cat === 'bebidas').reduce((s, i) => s + i.qty, 0);
+  const parts = [];
+  if (dishes) parts.push(dishes + ' plato' + (dishes > 1 ? 's' : ''));
+  if (drinks) parts.push(drinks + ' bebida' + (drinks > 1 ? 's' : ''));
+  return parts.join(' · ');
+}
+function derivedState(t) {
+  if (t.status === 'free')     return { key: 'libre',     label: 'Libre' };
+  if (t.status === 'reserved') return { key: 'reservada', label: 'Reservada' };
+  if (t.status === 'pagada')   return { key: 'pagada',    label: 'Pagada' };
+  if (t.billRequested)         return { key: 'pide-cuenta', label: 'Pide cuenta' };
+  const states = t.order.items.filter(i => i.state !== 'anulada').map(i => i.state);
+  if (!states.length)                        return { key: 'nueva',     label: 'Esperando pedido' };
+  if (states.some(s => s === 'lista'))       return { key: 'lista',     label: 'Lista para servir' };
+  if (states.some(s => s === 'en-cocina'))   return { key: 'en-cocina', label: 'En cocina' };
+  if (states.some(s => s === 'nueva'))       return { key: 'nueva',     label: 'Pedido nuevo' };
+  if (states.every(s => s === 'servida'))    return { key: 'servida',   label: 'Servida' };
+  return { key: 'servida', label: 'Servida' };
+}
+
+/* ============================================================
+   TOP BAR — CLOCK + BELL
+   ============================================================ */
+function tickClock() {
+  const d = new Date();
+  const s = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  document.getElementById('clock').textContent = s;
+}
+function updateBell() {
+  const total = TABLES.reduce((s, t) => s + t.calls.filter(c => !c.ack).length, 0);
+  const badge = document.getElementById('bellBadge');
+  const bell = document.getElementById('bellBtn');
+  if (total > 0) {
+    badge.textContent = total;
+    badge.style.display = 'flex';
+    bell.classList.add('has-alerts');
+  } else {
+    badge.style.display = 'none';
+    bell.classList.remove('has-alerts');
+  }
+}
+
+/* ============================================================
+   FILTER CHIPS
+   ============================================================ */
+const FILTERS = [
+  { id: 'all',      label: 'Todas',         urgent: false },
+  { id: 'mine',     label: 'Mis mesas',     urgent: false },
+  { id: 'ready',    label: 'Listas',        urgent: true, count: t => derivedState(t).key === 'lista' },
+  { id: 'calls',    label: 'Llamadas',      urgent: true, count: t => t.calls.some(c => !c.ack) },
+  { id: 'bill',     label: 'Pide cuenta',   urgent: false, count: t => t.billRequested },
+  { id: 'free',     label: 'Libres',        urgent: false, count: t => t.status === 'free' },
+];
+
+function renderChips() {
+  const chips = document.getElementById('chips');
+  chips.innerHTML = FILTERS.map(f => {
+    const count = f.count ? TABLES.filter(f.count).length : 0;
+    const showCount = f.count && count > 0;
+    const active = currentFilter === f.id;
+    const classes = ['chip'];
+    if (active) classes.push('active');
+    if (f.urgent && showCount) classes.push('urgent', 'pulsing');
+    return `<button class="${classes.join(' ')}" onclick="setFilter('${f.id}')">
+      ${f.label}${showCount ? ` <span class="chip-count">${count}</span>` : ''}
+    </button>`;
+  }).join('');
+}
+function setFilter(id) {
+  currentFilter = id;
+  renderChips();
+  renderList();
+}
+
+/* ============================================================
+   TABLE LIST
+   ============================================================ */
+/* Sort order reflects what the waiter needs to notice first. */
+function sortRank(t) {
+  if (t.calls.some(c => !c.ack))      return 0;
+  const s = derivedState(t).key;
+  if (s === 'lista')                  return 1;
+  if (t.priority)                     return 2;
+  if (s === 'pide-cuenta')            return 3;
+  if (s === 'en-cocina')              return 4;
+  if (s === 'nueva')                  return 5;
+  if (s === 'servida')                return 6;
+  if (t.status === 'reserved')        return 7;
+  return 8;
+}
+
+function filterPredicate(t) {
+  const f = FILTERS.find(x => x.id === currentFilter);
+  if (!f) return true;
+  if (f.id === 'all')  return true;
+  if (f.id === 'mine') return t.zone === 'Sala';
+  return f.count ? f.count(t) : true;
+}
+
+function renderList() {
+  const list = document.getElementById('tableList');
+  const rows = TABLES.filter(filterPredicate).sort((a, b) => sortRank(a) - sortRank(b));
+  if (!rows.length) {
+    list.innerHTML = `<div class="list-empty">No hay mesas en este filtro.</div>`;
+    return;
+  }
+  list.innerHTML = rows.map(renderCard).join('');
+  attachSwipeHandlers();
+}
+
+function renderCard(t) {
+  const st = derivedState(t);
+  const occupied = t.status === 'occupied' || t.status === 'pagada';
+  const total = tableTotal(t);
+  const flags = [];
+  if (t.calls.some(c => !c.ack)) flags.push(`<span class="flag call call-badge"><span class="material-symbols-rounded">notifications_active</span>Llama</span>`);
+  if (t.priority)                flags.push(`<span class="flag priority"><span class="material-symbols-rounded">bolt</span>Prioridad</span>`);
+  if (t.billRequested)           flags.push(`<span class="flag bill"><span class="material-symbols-rounded">receipt_long</span>Cuenta</span>`);
+  if (st.key === 'lista')        flags.push(`<span class="flag ready"><span class="material-symbols-rounded">restaurant</span>Listo</span>`);
+
+  let cta = '';
+  if (st.key === 'lista') {
+    cta = `<button class="btn-primary-sm success" onclick="event.stopPropagation(); serveAll(${t.num})">Servir todo</button>`;
+  } else if (t.billRequested) {
+    cta = `<button class="btn-primary-sm accent" onclick="event.stopPropagation(); openPay(${t.num})">Cobrar</button>`;
+  } else if (occupied) {
+    cta = `<button class="btn-secondary-sm" onclick="event.stopPropagation(); openTable(${t.num})">Ver pedido</button>`;
+  } else if (t.status === 'free') {
+    cta = `<button class="btn-secondary-sm" onclick="event.stopPropagation(); seatTable(${t.num})">Sentar</button>`;
+  } else if (t.status === 'reserved') {
+    cta = `<button class="btn-secondary-sm" onclick="event.stopPropagation(); seatTable(${t.num})">Llegada</button>`;
+  }
+
+  const subMeta = t.status === 'reserved'
+    ? `${t.zone} · ${t.seats} pax · Reserva ${t.reservation.name} ${t.reservation.time}`
+    : occupied
+      ? `${t.zone} · ${t.seats} pax · ${fmtElapsed(t.seatedAt)} · ${tableCourseCount(t) || 'sin pedido'}`
+      : `${t.zone} · ${t.seats} pax`;
+
+  const classes = ['tcard'];
+  if (t.calls.some(c => !c.ack)) classes.push('urgent', 'calls');
+  else if (st.key === 'lista')   classes.push('ready');
+
+  const showSwipe = occupied;
+
+  return `
+    <div class="tcard-wrap" data-table="${t.num}">
+      ${showSwipe ? `
+        <div class="tcard-actions">
+          <div class="swipe-action serve"><span class="material-symbols-rounded">restaurant</span> Servir</div>
+        </div>` : ''}
+      <div class="${classes.join(' ')}" onclick="openTable(${t.num})">
+        <div class="tcard-head">
+          <span class="tcard-num">Mesa ${t.num}</span>
+          <span class="tcard-meta">${subMeta}</span>
+          <span class="tcard-total ${occupied ? '' : 'muted'}">${occupied ? fmtEur(total) : '—'}</span>
+        </div>
+        <span class="tcard-state state-${st.key}"><span class="state-dot"></span>${st.label}</span>
+        ${flags.length ? `<div class="tcard-flags">${flags.join('')}</div>` : ''}
+        ${cta ? `<div class="tcard-cta">${cta}</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+/* Swipe-left reveals the "Servir" action. Falls back to tap on desktop; the
+   handler is intentionally simple because this is a demo, not gesture-heavy
+   production code. */
+function attachSwipeHandlers() {
+  document.querySelectorAll('.tcard-wrap').forEach(wrap => {
+    const card = wrap.querySelector('.tcard');
+    if (!card || !wrap.querySelector('.tcard-actions')) return;
+    let startX = null, dx = 0;
+    const onStart = e => {
+      startX = (e.touches ? e.touches[0].clientX : e.clientX);
+      card.classList.add('swiping');
+    };
+    const onMove = e => {
+      if (startX === null) return;
+      const x = (e.touches ? e.touches[0].clientX : e.clientX);
+      dx = Math.min(0, x - startX);
+      if (dx < -10) card.style.transform = `translateX(${Math.max(dx, -120)}px)`;
+    };
+    const onEnd = () => {
+      card.classList.remove('swiping');
+      if (dx < -80) {
+        const num = +wrap.dataset.table;
+        card.style.transform = 'translateX(-100%)';
+        setTimeout(() => serveAll(num), 200);
+      } else {
+        card.style.transform = '';
+      }
+      startX = null; dx = 0;
+    };
+    card.addEventListener('touchstart', onStart, { passive: true });
+    card.addEventListener('touchmove',  onMove,  { passive: true });
+    card.addEventListener('touchend',   onEnd);
+  });
+}
+
+/* ============================================================
+   TABLE ACTIONS
+   ============================================================ */
+function findTable(num) { return TABLES.find(t => t.num === num); }
+
+function serveAll(num) {
+  const t = findTable(num);
+  if (!t) return;
+  let served = 0;
+  t.order.items.forEach(i => {
+    if (i.state === 'lista') { i.state = 'servida'; served++; }
+  });
+  if (!served) { toast('Nada listo para servir en Mesa ' + num); return; }
+  toast(`Mesa ${num}: ${served} plato${served > 1 ? 's' : ''} servido${served > 1 ? 's' : ''}`, 'success');
+  rerender();
+  if (currentTableNum === num) renderSheet();
+}
+
+function seatTable(num) {
+  const t = findTable(num);
+  if (!t) return;
+  t.status = 'occupied';
+  t.seatedAt = Date.now();
+  t.reservation = null;
+  toast(`Mesa ${num} sentada`, 'success');
+  rerender();
+  openTable(num);
+}
+
+function freeTable(num) {
+  const t = findTable(num);
+  if (!t) return;
+  t.status = 'free';
+  t.seatedAt = null;
+  t.order.items = [];
+  t.calls = [];
+  t.billRequested = false;
+  t.priority = false;
+  toast(`Mesa ${num} liberada`, 'success');
+  rerender();
+  closeSheet();
+}
+
+function requestBill(num) {
+  const t = findTable(num);
+  t.billRequested = true;
+  toast(`Mesa ${num}: cuenta preparada`);
+  rerender();
+  if (currentTableNum === num) renderSheet();
+}
+
+/* ============================================================
+   BOTTOM SHEET (table detail)
+   ============================================================ */
+function openTable(num) {
+  currentTableNum = num;
+  currentTab = 'order';
+  document.querySelectorAll('.sheet-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === 'order'));
+  renderSheet();
+  document.getElementById('sheet').classList.add('show');
+  document.getElementById('sheetBackdrop').classList.add('show');
+}
+function closeSheet() {
+  document.getElementById('sheet').classList.remove('show');
+  document.getElementById('sheetBackdrop').classList.remove('show');
+  currentTableNum = null;
+}
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.sheet-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  renderSheet();
+}
+function renderSheet() {
+  const t = findTable(currentTableNum);
+  if (!t) return;
+  const occupied = t.status === 'occupied';
+  document.getElementById('sheetTitle').textContent = `Mesa ${t.num}`;
+  document.getElementById('sheetSub').textContent = occupied
+    ? `${t.seats} comensales · ${fmtElapsed(t.seatedAt)} sentados · ${fmtEur(tableTotal(t))}`
+    : t.status === 'reserved'
+      ? `Reserva ${t.reservation.name} · ${t.reservation.time} · ${t.reservation.guests} pax`
+      : `${t.seats} plazas · ${t.zone}`;
+
+  const body = document.getElementById('sheetBody');
+  if (currentTab === 'order')   body.innerHTML = renderOrderTab(t);
+  if (currentTab === 'actions') body.innerHTML = renderActionsTab(t);
+  if (currentTab === 'bill')    body.innerHTML = renderBillTab(t);
+}
+
+function renderOrderTab(t) {
+  if (!t.order.items.length && t.status !== 'occupied') {
+    return `<div class="list-empty">Mesa sin pedido.</div>
+      ${t.status === 'occupied' ? renderAddBtn() : ''}`;
+  }
+  const groups = {};
+  t.order.items.forEach(i => {
+    const cat = CATEGORIES.find(c => c.id === i.cat) || { name: 'Otros' };
+    (groups[cat.name] = groups[cat.name] || []).push(i);
+  });
+  const groupHtml = Object.entries(groups).map(([name, items]) => `
+    <div class="course-group">
+      <div class="course-title">${name}</div>
+      ${items.map(i => renderItemRow(t, i)).join('')}
+    </div>
+  `).join('');
+  const anyReady = t.order.items.some(i => i.state === 'lista');
+  return `
+    ${groupHtml}
+    ${t.status === 'occupied' ? renderAddBtn() : ''}
+    ${anyReady ? `
+      <div class="serve-all-bar">
+        <button class="btn-primary-sm success" onclick="serveAll(${t.num})">Marcar todo como servido</button>
+      </div>` : ''}
+  `;
+}
+function renderAddBtn() {
+  return `<button class="add-course-btn" onclick="openPicker()">
+    <span class="material-symbols-rounded">add</span> Añadir plato o bebida
+  </button>`;
+}
+function renderItemRow(t, i) {
+  const servable = i.state === 'lista';
+  const cancelled = i.state === 'anulada';
+  const checkClass = 'item-check' + (i.state === 'servida' ? ' on' : '') + (!servable && i.state !== 'servida' ? ' disabled' : '');
+  const extras = i.extras.length ? `<div class="item-extras">+ ${i.extras.map(e => e.name).join(', ')}</div>` : '';
+  const notes = i.notes ? `<div class="item-notes">“${i.notes}”</div>` : '';
+  const unit = i.price + i.extras.reduce((s, e) => s + e.price, 0);
+  return `
+    <div class="item-row ${cancelled ? 'cancelled' : ''}">
+      <div class="${checkClass}" onclick="toggleServed(${t.num}, ${i.id})">
+        <span class="material-symbols-rounded">check</span>
+      </div>
+      <div class="item-body">
+        <div class="item-name"><span class="item-qty">${i.qty}×</span>${i.name}</div>
+        ${extras}
+        ${notes}
+        <span class="item-state-pill ${i.state}">${stateLabel(i.state)}</span>
+      </div>
+      <div class="item-price">${fmtEur(unit * i.qty)}</div>
+      ${!cancelled ? `<button class="item-trash" onclick="removeItem(${t.num}, ${i.id})" aria-label="Eliminar">
+        <span class="material-symbols-rounded">delete</span>
+      </button>` : ''}
+    </div>
+  `;
+}
+function stateLabel(s) {
+  return { nueva: 'Nueva', 'en-cocina': 'En cocina', lista: 'Lista', servida: 'Servida', anulada: 'Anulada' }[s] || s;
+}
+
+function toggleServed(num, itemId) {
+  const t = findTable(num);
+  const i = t.order.items.find(x => x.id === itemId);
+  if (!i) return;
+  if (i.state === 'lista') i.state = 'servida';
+  else if (i.state === 'servida') i.state = 'lista';
+  else { toast('Este plato aún no está listo en cocina'); return; }
+  rerender();
+  renderSheet();
+}
+
+function removeItem(num, itemId) {
+  const t = findTable(num);
+  const i = t.order.items.find(x => x.id === itemId);
+  if (!i) return;
+  if (i.state === 'nueva') {
+    t.order.items = t.order.items.filter(x => x.id !== itemId);
+    toast('Plato eliminado');
+  } else {
+    confirmModal({
+      title: 'Anular plato',
+      body: `¿Anular "${i.name}" y avisar a cocina?`,
+      confirmLabel: 'Anular',
+      accent: true,
+      onConfirm: () => {
+        i.state = 'anulada';
+        toast('Cocina avisada · plato anulado', 'call');
+        rerender(); renderSheet();
+      }
+    });
+    return;
+  }
+  rerender(); renderSheet();
+}
+
+function renderActionsTab(t) {
+  const anyReady = t.order.items.some(i => i.state === 'lista');
+  const hasOrder = t.order.items.some(i => i.state !== 'anulada');
+  return `
+    <div class="action-grid">
+      <button class="action-btn success" onclick="serveAll(${t.num})" ${anyReady ? '' : 'disabled'}>
+        <span class="material-symbols-rounded">restaurant</span>Marcar servido
+      </button>
+      <button class="action-btn" onclick="openPicker()">
+        <span class="material-symbols-rounded">add</span>Añadir plato
+      </button>
+      <button class="action-btn accent" onclick="requestBill(${t.num})" ${hasOrder ? '' : 'disabled'}>
+        <span class="material-symbols-rounded">receipt_long</span>Pedir cuenta
+      </button>
+      <button class="action-btn primary" onclick="openPay(${t.num})" ${hasOrder ? '' : 'disabled'}>
+        <span class="material-symbols-rounded">payments</span>Cobrar
+      </button>
+      <button class="action-btn" onclick="openTransfer(${t.num})" ${hasOrder ? '' : 'disabled'}>
+        <span class="material-symbols-rounded">swap_horiz</span>Transferir mesa
+      </button>
+      <button class="action-btn" onclick="openKitchenNote(${t.num})">
+        <span class="material-symbols-rounded">sms</span>Avisar cocina
+      </button>
+      <button class="action-btn" onclick="openSplit(${t.num})" ${hasOrder ? '' : 'disabled'}>
+        <span class="material-symbols-rounded">call_split</span>Dividir cuenta
+      </button>
+      <button class="action-btn" onclick="confirmFree(${t.num})">
+        <span class="material-symbols-rounded">logout</span>Liberar mesa
+      </button>
+    </div>
+  `;
+}
+function confirmFree(num) {
+  confirmModal({
+    title: `Liberar Mesa ${num}`,
+    body: 'Se eliminará el pedido actual. ¿Seguro?',
+    confirmLabel: 'Liberar',
+    accent: true,
+    onConfirm: () => freeTable(num),
+  });
+}
+
+/* Cuenta tab */
+function renderBillTab(t) {
+  const subtotal = tableTotal(t);
+  const iva = subtotal * 0.10;
+  const base = subtotal - iva;
+  const tip = subtotal * (tipPercent / 100);
+  const total = subtotal + tip;
+  const rows = t.order.items.filter(i => i.state !== 'anulada').map(i => {
+    const unit = i.price + i.extras.reduce((s, e) => s + e.price, 0);
+    return `<div class="bill-row"><span>${i.qty}× ${i.name}</span><span>${fmtEur(unit * i.qty)}</span></div>`;
+  }).join('');
+  return `
+    ${rows || '<div class="list-empty">Sin consumos.</div>'}
+    <div class="bill-row" style="margin-top:10px"><span>Base imponible</span><span>${fmtEur(base)}</span></div>
+    <div class="bill-row"><span>IVA 10 %</span><span>${fmtEur(iva)}</span></div>
+    <div class="bill-row"><span>Subtotal</span><span>${fmtEur(subtotal)}</span></div>
+    <div style="margin-top:12px;font-size:12px;color:var(--text-secondary)">Propina</div>
+    <div class="tip-row">
+      ${[0, 5, 10].map(p => `<button class="tip-btn ${tipPercent === p ? 'active' : ''}" onclick="setTip(${p})">${p === 0 ? 'Sin propina' : p + '%'}</button>`).join('')}
+    </div>
+    <div class="bill-row total"><span>Total</span><span>${fmtEur(total)}</span></div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn-secondary-sm" style="flex:1;padding:10px" onclick="toast('Ticket enviado por email', 'success')">
+        Enviar por email
+      </button>
+      <button class="btn-primary-sm" style="flex:1;padding:10px" onclick="openPay(${t.num})">
+        Cobrar ${fmtEur(total)}
+      </button>
+    </div>
+  `;
+}
+function setTip(p) { tipPercent = p; renderSheet(); }
+
+/* ============================================================
+   MODALS — payment, transfer, kitchen note, split, generic confirm
+   ============================================================ */
+function openModal(html) {
+  document.getElementById('modalBox').innerHTML = html;
+  document.getElementById('modalBackdrop').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('modalBackdrop').classList.remove('show');
+}
+document.getElementById('modalBackdrop').addEventListener('click', e => {
+  if (e.target.id === 'modalBackdrop') closeModal();
+});
+
+let payMethod = 'card';
+function openPay(num) {
+  const t = findTable(num);
+  const subtotal = tableTotal(t);
+  const tip = subtotal * (tipPercent / 100);
+  const total = subtotal + tip;
+  payMethod = 'card';
+  openModal(`
+    <h3>Cobrar Mesa ${num}</h3>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">Total a cobrar</div>
+    <div style="font-size:28px;font-weight:700;letter-spacing:-0.5px;margin-bottom:12px">${fmtEur(total)}</div>
+    <div class="pay-methods">
+      <button class="pay-method selected" data-m="card" onclick="pickPay(this)"><span class="material-symbols-rounded">credit_card</span>Tarjeta</button>
+      <button class="pay-method" data-m="cash" onclick="pickPay(this)"><span class="material-symbols-rounded">payments</span>Efectivo</button>
+      <button class="pay-method" data-m="apple" onclick="pickPay(this)"><span class="material-symbols-rounded">phone_iphone</span>Apple Pay</button>
+      <button class="pay-method" data-m="link" onclick="pickPay(this)"><span class="material-symbols-rounded">qr_code_2</span>Link QR</button>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal()">Cancelar</button>
+      <button class="confirm accent" onclick="confirmPay(${num})">Cobrar</button>
+    </div>
+  `);
+}
+function pickPay(el) {
+  payMethod = el.dataset.m;
+  el.parentElement.querySelectorAll('.pay-method').forEach(b => b.classList.toggle('selected', b === el));
+}
+function confirmPay(num) {
+  const t = findTable(num);
+  t.status = 'pagada';
+  closeModal();
+  toast(`Mesa ${num} cobrada · ${payMethod}`, 'success');
+  rerender();
+  renderSheet();
+  setTimeout(() => {
+    /* Auto-free after payment so the demo loop doesn't leave a stale card. */
+    freeTable(num);
+  }, 2000);
+}
+
+function openTransfer(num) {
+  const freeOnes = TABLES.filter(t => t.status === 'free' && t.num !== num);
+  if (!freeOnes.length) { toast('No hay mesas libres para transferir'); return; }
+  openModal(`
+    <h3>Transferir Mesa ${num}</h3>
+    <div class="row">
+      <label>Mesa destino</label>
+      <select id="xferTo">
+        ${freeOnes.map(t => `<option value="${t.num}">Mesa ${t.num} · ${t.zone} · ${t.seats} pax</option>`).join('')}
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal()">Cancelar</button>
+      <button class="confirm" onclick="confirmTransfer(${num})">Transferir</button>
+    </div>
+  `);
+}
+function confirmTransfer(fromNum) {
+  const toNum = +document.getElementById('xferTo').value;
+  const from = findTable(fromNum), to = findTable(toNum);
+  to.status = 'occupied';
+  to.seatedAt = from.seatedAt;
+  to.calls = from.calls;
+  to.priority = from.priority;
+  to.billRequested = from.billRequested;
+  to.order = from.order;
+  from.status = 'free';
+  from.seatedAt = null;
+  from.calls = [];
+  from.priority = false;
+  from.billRequested = false;
+  from.order = { items: [] };
+  closeModal();
+  toast(`Mesa ${fromNum} transferida a Mesa ${toNum}`, 'success');
+  currentTableNum = toNum;
+  rerender();
+  renderSheet();
+}
+
+function openKitchenNote(num) {
+  openModal(`
+    <h3>Avisar cocina · Mesa ${num}</h3>
+    <div class="row">
+      <label>Mensaje</label>
+      <textarea id="koNote" placeholder="Ej. Sin sal en el solomillo"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal()">Cancelar</button>
+      <button class="confirm" onclick="sendKitchenNote(${num})">Enviar</button>
+    </div>
+  `);
+}
+function sendKitchenNote(num) {
+  const txt = document.getElementById('koNote').value.trim();
+  closeModal();
+  if (!txt) return;
+  toast(`Cocina avisada · Mesa ${num}`, 'call');
+}
+
+function openSplit(num) {
+  const t = findTable(num);
+  const items = t.order.items.filter(i => i.state !== 'anulada');
+  if (!items.length) return;
+  /* 2-ticket split is plenty for the MVP demo; more tickets would make the UI
+     busy without adding real storytelling value for investors. */
+  const split = { a: new Set(items.map(i => i.id)), b: new Set() };
+  window.__split = split;
+  openModal(renderSplitModal(t, items, split));
+}
+function renderSplitModal(t, items, split) {
+  const totalA = items.filter(i => split.a.has(i.id)).reduce((s, i) => s + i.qty * (i.price + i.extras.reduce((e, x) => e + x.price, 0)), 0);
+  const totalB = items.filter(i => split.b.has(i.id)).reduce((s, i) => s + i.qty * (i.price + i.extras.reduce((e, x) => e + x.price, 0)), 0);
+  return `
+    <h3>Dividir cuenta · Mesa ${t.num}</h3>
+    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">Toca un plato para alternar entre ticket A y B.</div>
+    <div style="max-height:240px;overflow-y:auto;border:1px solid var(--border-light);border-radius:8px">
+      ${items.map(i => {
+        const side = split.a.has(i.id) ? 'A' : 'B';
+        const unit = i.price + i.extras.reduce((s, e) => s + e.price, 0);
+        return `<div onclick="flipSplit(${i.id})" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border-light);cursor:pointer">
+          <span style="width:22px;height:22px;border-radius:50%;background:${side === 'A' ? 'var(--primary)' : 'var(--accent)'};color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">${side}</span>
+          <span style="flex:1;font-size:13px">${i.qty}× ${i.name}</span>
+          <span style="font-size:13px;font-variant-numeric:tabular-nums">${fmtEur(unit * i.qty)}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="bill-row" style="margin-top:10px"><span>Ticket A</span><span>${fmtEur(totalA)}</span></div>
+    <div class="bill-row"><span>Ticket B</span><span>${fmtEur(totalB)}</span></div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal()">Cerrar</button>
+      <button class="confirm" onclick="toast('Cuenta dividida lista para cobrar', 'success'); closeModal()">Guardar</button>
+    </div>
+  `;
+}
+function flipSplit(id) {
+  const s = window.__split;
+  if (s.a.has(id)) { s.a.delete(id); s.b.add(id); }
+  else             { s.b.delete(id); s.a.add(id); }
+  const t = findTable(currentTableNum);
+  const items = t.order.items.filter(i => i.state !== 'anulada');
+  document.getElementById('modalBox').innerHTML = renderSplitModal(t, items, s);
+}
+
+function confirmModal({ title, body, confirmLabel, accent, onConfirm }) {
+  openModal(`
+    <h3>${title}</h3>
+    <div style="font-size:14px;color:var(--text-secondary);margin:6px 0 10px">${body}</div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal()">Cancelar</button>
+      <button class="confirm ${accent ? 'accent' : ''}" id="confirmBtn">${confirmLabel}</button>
+    </div>
+  `);
+  document.getElementById('confirmBtn').onclick = () => { closeModal(); onConfirm(); };
+}
+
+/* ============================================================
+   NOTIFICATIONS (call-waiter feed)
+   ============================================================ */
+function openNotifications() {
+  renderNotifications();
+  document.getElementById('notifSheet').classList.add('show');
+  document.getElementById('notifBackdrop').classList.add('show');
+}
+function closeNotifications() {
+  document.getElementById('notifSheet').classList.remove('show');
+  document.getElementById('notifBackdrop').classList.remove('show');
+}
+function renderNotifications() {
+  const pings = [];
+  TABLES.forEach(t => t.calls.forEach(c => pings.push({ t, c })));
+  pings.sort((a, b) => b.c.at - a.c.at);
+  const host = document.getElementById('notifList');
+  if (!pings.length) { host.innerHTML = `<div class="list-empty">Sin avisos.</div>`; return; }
+  host.innerHTML = pings.map(({ t, c }) => {
+    const iconCls = c.reason.includes('cuenta') ? 'bill' : c.reason.includes('Falta') ? 'need' : '';
+    return `
+      <div class="ping ${c.ack ? 'ack' : ''}">
+        <div class="ping-icon ${iconCls}">
+          <span class="material-symbols-rounded">${iconCls === 'bill' ? 'receipt_long' : iconCls === 'need' ? 'room_service' : 'notifications_active'}</span>
+        </div>
+        <div class="ping-body">
+          <div class="ping-title">Mesa ${t.num}</div>
+          <div class="ping-reason">${c.reason}</div>
+          <div class="ping-time">${fmtElapsed(c.at)} atrás</div>
+          ${!c.ack ? `
+            <div class="ping-actions">
+              <button onclick="ackPing(${t.num}, ${c.at})">Voy</button>
+              <button class="go" onclick="goToPing(${t.num}, ${c.at})">Ir a la mesa</button>
+            </div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+function ackPing(num, at) {
+  const t = findTable(num);
+  const c = t.calls.find(c => c.at === at);
+  if (c) c.ack = true;
+  renderNotifications();
+  rerender();
+}
+function goToPing(num, at) {
+  ackPing(num, at);
+  closeNotifications();
+  openTable(num);
+}
+
+/* ============================================================
+   ADD-ITEM PICKER (waiter takes an order at the table)
+   ============================================================ */
+let pickerCat = 'para-picar';
+function openPicker() {
+  if (!currentTableNum) return;
+  pickerCat = 'para-picar';
+  renderPicker();
+  document.getElementById('picker').classList.add('show');
+  document.getElementById('pickerBackdrop').classList.add('show');
+}
+function closePicker() {
+  document.getElementById('picker').classList.remove('show');
+  document.getElementById('pickerBackdrop').classList.remove('show');
+}
+function renderPicker() {
+  document.getElementById('pickerCats').innerHTML = CATEGORIES.map(c =>
+    `<button class="chip ${pickerCat === c.id ? 'active' : ''}" onclick="setPickerCat('${c.id}')">${c.name}</button>`
+  ).join('');
+  const items = Object.entries(MENU_DATA).filter(([, m]) => m.cat === pickerCat);
+  document.getElementById('pickerList').innerHTML = items.map(([key, m]) =>
+    `<div class="picker-item" onclick="addItemToTable('${key}')">
+      <div class="pn">${m.name}</div>
+      <div class="pp">${fmtEur(m.price)}</div>
+    </div>`
+  ).join('');
+}
+function setPickerCat(id) { pickerCat = id; renderPicker(); }
+function addItemToTable(key) {
+  const t = findTable(currentTableNum);
+  if (!t) return;
+  /* Merge with an existing 'nueva' line if the same dish is already there —
+     mirrors how a waiter's notepad works in real life. */
+  const existing = t.order.items.find(i => i.key === key && i.state === 'nueva');
+  if (existing) existing.qty += 1;
+  else t.order.items.push(mkItem(key, 1, 'nueva', 0));
+  closePicker();
+  toast(`${MENU_DATA[key].name} añadido`, 'success');
+  rerender();
+  renderSheet();
+}
+
+/* ============================================================
+   TOASTS
+   ============================================================ */
+function toast(msg, kind) {
+  const stack = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast ' + (kind || '');
+  el.innerHTML = `<span class="material-symbols-rounded">${kind === 'success' ? 'check_circle' : kind === 'call' ? 'notifications_active' : 'info'}</span>${msg}`;
+  stack.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('fade-out');
+    setTimeout(() => el.remove(), 250);
+  }, 2600);
+}
+
+/* ============================================================
+   SIMULATION — keeps the demo alive
+   ============================================================ */
+
+/* Items advance state over time so a 3-minute demo always has something
+   changing, unless the waiter intervenes first. Thresholds deliberately
+   short so the whole loop is visible inside a demo window. */
+function advanceStates() {
+  let changed = false;
+  TABLES.forEach(t => {
+    if (t.status !== 'occupied') return;
+    t.order.items.forEach(i => {
+      const age = (Date.now() - i.sentAt) / MIN;
+      if (i.state === 'nueva' && age >= 0.5) { i.state = 'en-cocina'; changed = true; }
+      if (i.state === 'en-cocina' && age >= 2) { i.state = 'lista';    changed = true; }
+    });
+  });
+  if (changed) rerender();
+}
+
+/* Seed one active ping on load (Mesa 3) plus a delayed arrival so the demo
+   shows a live push without the presenter having to fake anything. */
+function seedSimulatedPings() {
+  setTimeout(() => {
+    const t = findTable(6);
+    if (!t) return;
+    t.calls.push({ reason: 'Pide cuenta', at: Date.now(), ack: false });
+    toast('Mesa 6: llama camarero · Pide cuenta', 'call');
+    rerender();
+  }, 8000);
+  setTimeout(() => {
+    const t = findTable(2);
+    if (!t) return;
+    t.calls.push({ reason: 'Falta algo en la mesa', at: Date.now(), ack: false });
+    toast('Mesa 2: llama camarero', 'call');
+    rerender();
+  }, 22000);
+}
+
+/* ============================================================
+   RERENDER + BOOT
+   ============================================================ */
+function rerender() {
+  renderChips();
+  renderList();
+  updateBell();
+}
+
+function boot() {
+  renderChips();
+  renderList();
+  updateBell();
+  tickClock();
+  setInterval(tickClock, 30 * 1000);
+  setInterval(() => { renderList(); }, 30 * 1000);
+  setInterval(advanceStates, 5 * 1000);
+  seedSimulatedPings();
+}
+boot();
+</script>
+</body>
+</html>

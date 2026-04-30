@@ -237,6 +237,30 @@
 
 ---
 
+### Act 3.5: Waiter on the Floor (45 sec)
+
+**PHONE — Waiter View (`waiter/index.html`)**
+
+[Switch to a second phone — or open the waiter view on the same mobile. Show the list with Mesa 3 pinned to the top pulsing red and Mesa 5 below it highlighted green.]
+
+"Este es el móvil de Laura, la camarera. La Mesa 3 la está llamando — lo ve en rojo, y la campana arriba vibra."
+
+**Talking point:** The waiter doesn't carry a notepad or stare at the POS — they carry one phone that tells them, in priority order, which table needs them next.
+
+[Tap the bell, then "Ir a la mesa" on the Mesa 3 ping.]
+
+"La llamada se abre directamente en la ficha de la mesa. Laura ve el pedido completo, qué está en cocina, qué está listo, y qué ya se sirvió."
+
+[Switch to the `Acciones` tab, tap "Añadir plato", pick a dessert, confirm.]
+
+"Si el cliente pide un postre, Laura lo añade desde aquí — el mismo menú que ve el cliente — y el pedido entra directo en cocina. Sin correr al POS."
+
+**WOW MOMENT #5.5:** Ahora Laura vuelve a la lista y la Mesa 5 tiene 'Lista para servir' en verde. Desliza la tarjeta a la izquierda y la marca como servida en un gesto, sin entrar a ningún menú.
+
+**Talking point:** One waiter covers more tables because the noise is filtered — the view only surfaces what actually needs a human right now.
+
+---
+
 ### Act 4: Management Tools (1 min)
 
 **DESKTOP — Dashboard**
@@ -326,6 +350,7 @@
 - "Tu trabajo se vuelve más fácil y más humano — menos transaccional, más hospitalidad."
 - "Las propinas suben porque tienes más tiempo para cuidar a los clientes."
 - "No más correr a la cocina para preguntar si algo está listo — lo ves en el mapa de mesas."
+- "En tu móvil ves solo las mesas que te necesitan ahora mismo: las que llaman, las que están listas para servir, las que piden cuenta. El resto se queda al fondo."
 
 ---
 

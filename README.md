@@ -59,6 +59,16 @@ The front-of-house management tool for restaurant owners and managers.
 - **Menu Management** -- Table view of all items with category filters and availability toggles. Toggle an item off and it shows "Agotado" instantly. Add new items via modal.
 - **Configuration** -- Brand color picker with live preview, payment mode selection (al final vs. por comanda), and service toggles (turno doble, digital tips, kitchen notifications).
 
+### Waiter View (`waiter/index.html`)
+
+The phone-first tool a floor waiter carries through service. It bridges the customer order and the kitchen display, so one person on the floor can see every table, what state each order is in, and act on whichever one needs attention first.
+
+**Layout:** Top bar with waiter identity, a live clock, and a shaking bell for "call waiter" pings -> filter chips (`Todas`, `Mis mesas`, `Listas`, `Llamadas`, `Pide cuenta`, `Libres`) with urgent chips that pulse when non-zero -> a sorted table list where calls and ready-to-serve tables float to the top, each card showing the table's state pill, running bill, active flags, and a context-aware CTA (`Servir`, `Cobrar`, `Ver pedido`, `Sentar`).
+
+**Table detail (bottom sheet):** Three tabs. `Pedido` groups items by course, shows per-item state (`Nueva`, `En cocina`, `Lista`, `Servida`), lets the waiter tick items off individually or mark the whole table served, and opens a category picker to add dishes at the table (reusing the customer-flow menu). Removing an item already in cocina prompts a cancellation that "notifies" the kitchen. `Acciones` is a grid of quick actions: serve, pedir cuenta, cobrar (tarjeta / efectivo / Apple Pay / link QR stubs), transferir mesa, avisar cocina, dividir cuenta (2-ticket split), liberar. `Cuenta` shows the itemised bill with IVA breakdown and a propina toggle.
+
+**Key interactions:** Swipe-left on a card marks it served. The bell opens a right-side feed of pings with `Voy` and `Ir a la mesa` per row. Item states auto-advance over time (`nueva -> en-cocina -> lista`) and a simulated ping arrives eight seconds after load, so the demo always has something moving without a presenter scripting it. Seed data overlaps with `restaurant-operations.html` and `restaurant-kitchen.html` -- same Mesa 3 that's late in the KDS is the one pinging here -- so a demo can cut between all three screens and tell one coherent story.
+
 ### AI Onboarding (`ai-onboarding.html`)
 
 The main selling point of the restaurant onboarding flow. A restaurant owner uploads their existing menu and Mzenas creates their entire digital menu automatically.
@@ -100,6 +110,7 @@ customer-flow.html          End-customer mobile ordering experience
 restaurant-kitchen.html     Kitchen Display System (dark theme)
 restaurant-operations.html  Table map, dashboard, menu management, config
 ai-onboarding.html          AI-powered menu upload and onboarding
+waiter/index.html           Waiter floor view (phone-first)
 docs/
   initial-proposal.md       Investment proposal
   honest-greens-ux-research.md  UX research and design inspiration
